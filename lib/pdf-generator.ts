@@ -1,4 +1,5 @@
-import puppeteer from 'puppeteer'
+import puppeteer from 'puppeteer-core'
+import chromium from '@sparticuz/chromium'
 
 interface QuoteItem {
   productName: string
@@ -25,15 +26,19 @@ interface QuoteData {
   validUntil: string
 }
 
-export async function generateQuotePDF(data: QuoteData): Promise<Buffer> {
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
-  })
-
+export async function generateQuotePDF(quoteData: QuoteData): Promise<Buffer> {
+  let browser = null
   try {
+    // Use serverless Chrome for Vercel
+    browser = await puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: null,
+      executablePath: await chromium.executablePath(),
+      headless: true,
+    })
+
     const page = await browser.newPage()
-    const html = generateQuoteHTML(data)
+    const html = generateQuoteHTML(quoteData)
     await page.setContent(html, { waitUntil: 'networkidle0' })
 
     const pdf = await page.pdf({
@@ -48,8 +53,13 @@ export async function generateQuotePDF(data: QuoteData): Promise<Buffer> {
     })
 
     return Buffer.from(pdf)
+  } catch (error) {
+    console.error('PDF generation error:', error)
+    throw error
   } finally {
-    await browser.close()
+    if (browser) {
+      await browser.close()
+    }
   }
 }
 

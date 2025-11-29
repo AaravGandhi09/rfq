@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Mail, ArrowLeft, Plus, Trash2, Loader2 } from 'lucide-react'
+import { Mail, ArrowLeft, Plus, Trash2, Loader2, Edit } from 'lucide-react'
 import Link from 'next/link'
 
 export default function AdminEmailAccounts() {
@@ -14,6 +14,7 @@ export default function AdminEmailAccounts() {
     const [accounts, setAccounts] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [showAddForm, setShowAddForm] = useState(false)
+    const [editingId, setEditingId] = useState<string | null>(null)
     const [formData, setFormData] = useState({
         email: '',
         provider: 'gmail',
@@ -63,11 +64,17 @@ export default function AdminEmailAccounts() {
         })
     }
 
-    const handleAddAccount = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         try {
-            const res = await fetch('/api/admin/email-accounts', {
-                method: 'POST',
+            const url = editingId
+                ? `/api/admin/email-accounts?id=${editingId}`
+                : '/api/admin/email-accounts'
+
+            const method = editingId ? 'PUT' : 'POST'
+
+            const res = await fetch(url, {
+                method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     ...formData,
@@ -76,30 +83,50 @@ export default function AdminEmailAccounts() {
                 })
             })
 
-            if (res.ok) {
-                setShowAddForm(false)
-                setFormData({
-                    email: '',
-                    provider: 'gmail',
-                    imap_host: 'imap.gmail.com',
-                    imap_port: '993',
-                    username: '',
-                    password: '',
-                    skip_read_emails: true,
-                    process_from_date: '',
-                    process_to_date: '',
-                    blacklisted_emails: []
-                })
-                setNewBlacklistEmail('')
-                fetchAccounts()
-            } else {
-                const error = await res.json()
-                alert(`Error: ${error.error}`)
+            const data = await res.json()
+
+            if (!res.ok) {
+                alert(`Error: ${data.error}`)
+                return
             }
+
+            setShowAddForm(false)
+            setEditingId(null)
+            setFormData({
+                email: '',
+                provider: 'gmail',
+                imap_host: 'imap.gmail.com',
+                imap_port: '993',
+                username: '',
+                password: '',
+                skip_read_emails: true,
+                process_from_date: '',
+                process_to_date: '',
+                blacklisted_emails: []
+            })
+            setNewBlacklistEmail('')
+            fetchAccounts()
         } catch (error) {
-            console.error('Error adding account:', error)
-            alert('Failed to add account')
+            console.error('Error saving account:', error)
+            alert('Failed to save account')
         }
+    }
+
+    const handleEdit = (account: any) => {
+        setEditingId(account.id)
+        setFormData({
+            email: account.email,
+            provider: account.provider,
+            imap_host: account.imap_host,
+            imap_port: account.imap_port.toString(),
+            username: account.username || '',
+            password: '', // Don't populate password for security
+            skip_read_emails: account.skip_read_emails,
+            process_from_date: account.process_from_date || '',
+            process_to_date: account.process_to_date || '',
+            blacklisted_emails: account.blacklisted_emails || []
+        })
+        setShowAddForm(true)
     }
 
     const handleDelete = async (id: string) => {
@@ -140,10 +167,10 @@ export default function AdminEmailAccounts() {
                 {showAddForm && (
                     <Card className="mb-6">
                         <CardHeader>
-                            <CardTitle className="text-gray-900">Add Email Account</CardTitle>
+                            <CardTitle className="text-gray-900">{editingId ? 'Edit Email Account' : 'Add New Email Account'}</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <form onSubmit={handleAddAccount} className="space-y-4">
+                            <form onSubmit={handleSubmit} className="space-y-4">
                                 <div>
                                     <Label className="text-gray-900">Provider</Label>
                                     <select
@@ -297,8 +324,30 @@ export default function AdminEmailAccounts() {
                                 </div>
 
                                 <div className="flex gap-2">
-                                    <Button type="submit">Add Account</Button>
-                                    <Button type="button" variant="outline" onClick={() => setShowAddForm(false)} className="text-black">Cancel</Button>
+                                    <Button type="submit">{editingId ? 'Update Account' : 'Add Account'}</Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => {
+                                            setShowAddForm(false)
+                                            setEditingId(null)
+                                            setFormData({
+                                                email: '',
+                                                provider: 'gmail',
+                                                imap_host: 'imap.gmail.com',
+                                                imap_port: '993',
+                                                username: '',
+                                                password: '',
+                                                skip_read_emails: true,
+                                                process_from_date: '',
+                                                process_to_date: '',
+                                                blacklisted_emails: []
+                                            })
+                                        }}
+                                        className="text-black"
+                                    >
+                                        Cancel
+                                    </Button>
                                 </div>
                             </form>
                         </CardContent>
@@ -345,9 +394,24 @@ export default function AdminEmailAccounts() {
                                                 </div>
                                             )}
                                         </div>
-                                        <Button variant="outline" size="sm" onClick={() => handleDelete(account.id)}>
-                                            <Trash2 className="w-4 h-4" />
-                                        </Button>
+                                        <div className="flex gap-2">
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => handleEdit(account)}
+                                                className="text-gray-900"
+                                            >
+                                                <Edit className="w-4 h-4 mr-1" />
+                                                Edit
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => handleDelete(account.id)}
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </Button>
+                                        </div>
                                     </div>
                                 ))}
                             </div>

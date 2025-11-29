@@ -51,7 +51,7 @@ ${emailBody}
 Extract products as JSON:`
 
         const response = await groq.chat.completions.create({
-            model: 'llama-3.1-70b-versatile', // Best model for extraction
+            model: 'llama-3.3-70b-versatile', // Updated from deprecated llama-3.1-70b
             messages: [
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: userPrompt }
@@ -108,7 +108,7 @@ Return ONLY valid JSON in this format:
 }`
 
         const response = await groq.chat.completions.create({
-            model: 'llama-3.1-70b-versatile',
+            model: 'llama-3.3-70b-versatile',
             messages: [
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: `Identify columns:\n${JSON.stringify(sample, null, 2)}` }

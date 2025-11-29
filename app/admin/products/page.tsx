@@ -297,8 +297,8 @@ export default function AdminProducts() {
                                                             <div className="text-sm text-gray-900">{product.description}</div>
                                                         </td>
                                                         <td className="px-4 py-3 text-sm text-gray-900">{product.category}</td>
-                                                        <td className="px-4 py-3 font-semibold text-gray-900">${product.base_price}</td>
-                                                        <td className="px-4 py-3 text-sm text-gray-900">${product.min_price} - ${product.max_price}</td>
+                                                        <td className="px-4 py-3 font-semibold text-gray-900">₹{product.base_price}</td>
+                                                        <td className="px-4 py-3 text-sm text-gray-900">₹{product.min_price} - ₹{product.max_price}</td>
                                                         <td className="px-4 py-3 text-sm text-gray-900">{product.unit}</td>
                                                         <td className="px-4 py-3">
                                                             <div className="flex gap-1">

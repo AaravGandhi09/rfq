@@ -1,5 +1,4 @@
-import puppeteer from 'puppeteer-core'
-import chromium from '@sparticuz/chromium'
+import htmlPdf from 'html-pdf-node'
 
 interface QuoteItem {
   productName: string
@@ -27,43 +26,27 @@ interface QuoteData {
 }
 
 export async function generateQuotePDF(data: QuoteData): Promise<Buffer> {
-  let browser = null
-
   try {
-    // Configure chromium for Vercel/AWS Lambda
-    if (process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.VERCEL) {
-      chromium.setGraphicsMode = false
-    }
-
-    browser = await puppeteer.launch({
-      args: chromium.args,
-      executablePath: await chromium.executablePath(),
-      headless: true,
-    })
-
-    const page = await browser.newPage()
     const html = generateQuoteHTML(data)
-    await page.setContent(html, { waitUntil: 'networkidle0' })
 
-    const pdf = await page.pdf({
+    const options = {
       format: 'A4',
-      printBackground: true,
       margin: {
         top: '12mm',
         right: '12mm',
         bottom: '12mm',
         left: '12mm'
-      }
-    })
+      },
+      printBackground: true
+    }
 
-    return Buffer.from(pdf)
+    const file = { content: html }
+    const pdfBuffer = await htmlPdf.generatePdf(file, options) as Buffer
+
+    return pdfBuffer
   } catch (error) {
     console.error('PDF generation error:', error)
     throw error
-  } finally {
-    if (browser) {
-      await browser.close()
-    }
   }
 }
 

@@ -125,7 +125,7 @@ export class EmailMonitor {
 
                     fetch.on('message', (msg, seqno) => {
                         msg.on('body', (stream) => {
-                            simpleParser(stream, async (err, parsed) => {
+                            simpleParser(stream as any, async (err, parsed) => {
                                 if (err) {
                                     console.error('Parse error:', err)
                                     return

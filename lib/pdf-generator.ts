@@ -1,4 +1,4 @@
-import htmlPdf from 'html-pdf-node'
+import PDFDocument from 'pdfkit'
 
 interface QuoteItem {
   productName: string
@@ -26,28 +26,69 @@ interface QuoteData {
 }
 
 export async function generateQuotePDF(data: QuoteData): Promise<Buffer> {
-  try {
-    const html = generateQuoteHTML(data)
+  return new Promise((resolve, reject) => {
+    try {
+      const doc = new PDFDocument({ size: 'A4', margin: 50 })
+      const chunks: Buffer[] = []
 
-    const options = {
-      format: 'A4',
-      margin: {
-        top: '12mm',
-        right: '12mm',
-        bottom: '12mm',
-        left: '12mm'
-      },
-      printBackground: true
+      doc.on('data', (chunk: Buffer) => chunks.push(chunk))
+      doc.on('end', () => resolve(Buffer.concat(chunks)))
+      doc.on('error', reject)
+
+      // Header
+      doc.fontSize(20).text('QUOTATION', { align: 'center' })
+      doc.moveDown()
+
+      // Company Info
+      doc.fontSize(12).text('Tulsi Marketing', { align: 'left' })
+      doc.fontSize(10).text('PAN: AAZPL3421B | GSTIN: 29AAZPL3421B1ZM')
+      doc.moveDown()
+
+      // Quote Details
+      doc.text(`Quote ID: ${data.quoteId}`)
+      doc.text(`Date: ${data.date}`)
+      doc.text(`Valid Until: ${data.validUntil}`)
+      doc.moveDown()
+
+      // Customer Details
+      doc.text(`Bill To: ${data.customerName}`)
+      if (data.companyName) doc.text(`Company: ${data.companyName}`)
+      if (data.customerGstin) doc.text(`GSTIN: ${data.customerGstin}`)
+      if (data.billingAddress) doc.text(`Address: ${data.billingAddress}`)
+      doc.moveDown()
+
+      // Items Table Header
+      const tableTop = doc.y
+      doc.fontSize(10).text('Item', 50, tableTop, { width: 200 })
+      doc.text('Qty', 250, tableTop, { width: 50 })
+      doc.text('Price', 300, tableTop, { width: 80 })
+      doc.text('Total', 380, tableTop, { width: 80 })
+      doc.moveDown()
+
+      // Items
+      let y = doc.y
+      data.matchedItems.forEach((item) => {
+        doc.text(item.productName, 50, y, { width: 200 })
+        doc.text(item.quantity.toString(), 250, y, { width: 50 })
+        doc.text(`₹${item.unitPrice || 0}`, 300, y, { width: 80 })
+        doc.text(`₹${item.total || 0}`, 380, y, { width: 80 })
+        y += 20
+      })
+
+      doc.moveDown(2)
+
+      // Tax Calculations
+      const { cgst, sgst, total } = calculateTax(data.subtotal)
+      doc.text(`Subtotal: ₹${data.subtotal.toFixed(2)}`, { align: 'right' })
+      doc.text(`CGST (9%): ₹${cgst.toFixed(2)}`, { align: 'right' })
+      doc.text(`SGST (9%): ₹${sgst.toFixed(2)}`, { align: 'right' })
+      doc.fontSize(12).text(`Total: ₹${total.toFixed(2)}`, { align: 'right' })
+
+      doc.end()
+    } catch (error) {
+      reject(error)
     }
-
-    const file = { content: html }
-    const pdfBuffer = await htmlPdf.generatePdf(file, options) as Buffer
-
-    return pdfBuffer
-  } catch (error) {
-    console.error('PDF generation error:', error)
-    throw error
-  }
+  })
 }
 
 function calculateTax(subtotal: number) {

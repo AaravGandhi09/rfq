@@ -123,8 +123,8 @@ export default function AdminFlagged() {
                                                 <summary className="cursor-pointer text-sm text-blue-600 hover:text-blue-800">
                                                     View AI Extraction Details
                                                 </summary>
-                                                <pre className="mt-2 p-3 bg-gray-100 rounded text-xs overflow-x-auto">
-                                                    {JSON.stringify(email.ai_extraction, null, 2)}
+                                                <pre className="bg-gray-50 p-3 rounded text-xs overflow-auto max-h-64 text-gray-900">
+                                                    {JSON.stringify(email.ai_extraction_result, null, 2)}
                                                 </pre>
                                             </details>
                                         )}

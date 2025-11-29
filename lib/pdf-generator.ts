@@ -1,4 +1,4 @@
-import PDFDocument from 'pdfkit'
+import { jsPDF } from 'jspdf'
 
 interface QuoteItem {
   productName: string
@@ -26,69 +26,87 @@ interface QuoteData {
 }
 
 export async function generateQuotePDF(data: QuoteData): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    try {
-      const doc = new PDFDocument({ size: 'A4', margin: 50 })
-      const chunks: Buffer[] = []
+  try {
+    const doc = new jsPDF()
+    let y = 20
 
-      doc.on('data', (chunk: Buffer) => chunks.push(chunk))
-      doc.on('end', () => resolve(Buffer.concat(chunks)))
-      doc.on('error', reject)
+    // Header
+    doc.setFontSize(20)
+    doc.text('QUOTATION', 105, y, { align: 'center' })
+    y += 15
 
-      // Header
-      doc.fontSize(20).text('QUOTATION', { align: 'center' })
-      doc.moveDown()
+    // Company Info
+    doc.setFontSize(12)
+    doc.text('Tulsi Marketing', 20, y)
+    y += 7
+    doc.setFontSize(10)
+    doc.text('PAN: AAZPL3421B | GSTIN: 29AAZPL3421B1ZM', 20, y)
+    y += 12
 
-      // Company Info
-      doc.fontSize(12).text('Tulsi Marketing', { align: 'left' })
-      doc.fontSize(10).text('PAN: AAZPL3421B | GSTIN: 29AAZPL3421B1ZM')
-      doc.moveDown()
+    // Quote Details
+    doc.text(`Quote ID: ${data.quoteId}`, 20, y)
+    y += 7
+    doc.text(`Date: ${data.date}`, 20, y)
+    y += 7
+    doc.text(`Valid Until: ${data.validUntil}`, 20, y)
+    y += 12
 
-      // Quote Details
-      doc.text(`Quote ID: ${data.quoteId}`)
-      doc.text(`Date: ${data.date}`)
-      doc.text(`Valid Until: ${data.validUntil}`)
-      doc.moveDown()
-
-      // Customer Details
-      doc.text(`Bill To: ${data.customerName}`)
-      if (data.companyName) doc.text(`Company: ${data.companyName}`)
-      if (data.customerGstin) doc.text(`GSTIN: ${data.customerGstin}`)
-      if (data.billingAddress) doc.text(`Address: ${data.billingAddress}`)
-      doc.moveDown()
-
-      // Items Table Header
-      const tableTop = doc.y
-      doc.fontSize(10).text('Item', 50, tableTop, { width: 200 })
-      doc.text('Qty', 250, tableTop, { width: 50 })
-      doc.text('Price', 300, tableTop, { width: 80 })
-      doc.text('Total', 380, tableTop, { width: 80 })
-      doc.moveDown()
-
-      // Items
-      let y = doc.y
-      data.matchedItems.forEach((item) => {
-        doc.text(item.productName, 50, y, { width: 200 })
-        doc.text(item.quantity.toString(), 250, y, { width: 50 })
-        doc.text(`₹${item.unitPrice || 0}`, 300, y, { width: 80 })
-        doc.text(`₹${item.total || 0}`, 380, y, { width: 80 })
-        y += 20
-      })
-
-      doc.moveDown(2)
-
-      // Tax Calculations
-      const { cgst, sgst, total } = calculateTax(data.subtotal)
-      doc.text(`Subtotal: ₹${data.subtotal.toFixed(2)}`, { align: 'right' })
-      doc.text(`CGST (9%): ₹${cgst.toFixed(2)}`, { align: 'right' })
-      doc.text(`SGST (9%): ₹${sgst.toFixed(2)}`, { align: 'right' })
-      doc.fontSize(12).text(`Total: ₹${total.toFixed(2)}`, { align: 'right' })
-
-      doc.end()
-    } catch (error) {
-      reject(error)
+    // Customer Details
+    doc.text(`Bill To: ${data.customerName}`, 20, y)
+    y += 7
+    if (data.companyName) {
+      doc.text(`Company: ${data.companyName}`, 20, y)
+      y += 7
     }
-  })
+    if (data.customerGstin) {
+      doc.text(`GSTIN: ${data.customerGstin}`, 20, y)
+      y += 7
+    }
+    if (data.billingAddress) {
+      doc.text(`Address: ${data.billingAddress}`, 20, y)
+      y += 7
+    }
+    y += 10
+
+    // Table Header
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'bold')
+    doc.text('Item', 20, y)
+    doc.text('Qty', 100, y)
+    doc.text('Price', 130, y)
+    doc.text('Total', 170, y)
+    y += 7
+    doc.setFont('helvetica', 'normal')
+
+    // Items
+    data.matchedItems.forEach((item) => {
+      doc.text(item.productName.substring(0, 40), 20, y)
+      doc.text(item.quantity.toString(), 100, y)
+      doc.text(`Rs ${item.unitPrice || 0}`, 130, y)
+      doc.text(`Rs ${item.total || 0}`, 170, y)
+      y += 7
+    })
+
+    y += 10
+
+    // Tax Calculations
+    const { cgst, sgst, total } = calculateTax(data.subtotal)
+    doc.text(`Subtotal: Rs ${data.subtotal.toFixed(2)}`, 140, y)
+    y += 7
+    doc.text(`CGST (9%): Rs ${cgst.toFixed(2)}`, 140, y)
+    y += 7
+    doc.text(`SGST (9%): Rs ${sgst.toFixed(2)}`, 140, y)
+    y += 7
+    doc.setFont('helvetica', 'bold')
+    doc.text(`Total: Rs ${total.toFixed(2)}`, 140, y)
+
+    // Convert to Buffer
+    const pdfArrayBuffer = doc.output('arraybuffer')
+    return Buffer.from(pdfArrayBuffer)
+  } catch (error) {
+    console.error('PDF generation error:', error)
+    throw error
+  }
 }
 
 function calculateTax(subtotal: number) {

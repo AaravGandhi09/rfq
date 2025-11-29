@@ -57,6 +57,51 @@ export async function POST(request: NextRequest) {
     }
 }
 
+// PUT update email account
+export async function PUT(request: NextRequest) {
+    try {
+        const { searchParams } = new URL(request.url)
+        const id = searchParams.get('id')
+
+        if (!id) {
+            return NextResponse.json({ error: 'Account ID required' }, { status: 400 })
+        }
+
+        const body = await request.json()
+
+        // Build update object
+        const updateData: any = {
+            email: body.email,
+            provider: body.provider,
+            imap_host: body.imap_host,
+            imap_port: body.imap_port || 993,
+            username: body.username || body.email,
+            skip_read_emails: body.skip_read_emails ?? true,
+            process_from_date: body.process_from_date || null,
+            process_to_date: body.process_to_date || null,
+            blacklisted_emails: body.blacklisted_emails || []
+        }
+
+        // Only update password if provided (since we don't show it in edit form)
+        if (body.password && body.password.trim()) {
+            updateData.password_encrypted = Buffer.from(body.password).toString('base64')
+        }
+
+        const { data, error } = await supabaseAdmin
+            .from('email_accounts')
+            .update(updateData)
+            .eq('id', id)
+            .select()
+            .single()
+
+        if (error) throw error
+
+        return NextResponse.json({ success: true, account: data })
+    } catch (error: any) {
+        return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+}
+
 // DELETE email account
 export async function DELETE(request: NextRequest) {
     try {

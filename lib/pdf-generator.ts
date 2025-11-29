@@ -26,19 +26,23 @@ interface QuoteData {
   validUntil: string
 }
 
-export async function generateQuotePDF(quoteData: QuoteData): Promise<Buffer> {
+export async function generateQuotePDF(data: QuoteData): Promise<Buffer> {
   let browser = null
+
   try {
-    // Use serverless Chrome for Vercel
+    // Configure chromium for Vercel/AWS Lambda
+    if (process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.VERCEL) {
+      chromium.setGraphicsMode = false
+    }
+
     browser = await puppeteer.launch({
       args: chromium.args,
-      defaultViewport: null,
       executablePath: await chromium.executablePath(),
       headless: true,
     })
 
     const page = await browser.newPage()
-    const html = generateQuoteHTML(quoteData)
+    const html = generateQuoteHTML(data)
     await page.setContent(html, { waitUntil: 'networkidle0' })
 
     const pdf = await page.pdf({

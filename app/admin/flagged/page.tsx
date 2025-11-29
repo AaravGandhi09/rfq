@@ -33,6 +33,28 @@ export default function AdminFlagged() {
         }
     }
 
+    const handleClearAll = async () => {
+        if (!confirm('Are you sure you want to clear all flagged emails? This cannot be undone.')) {
+            return
+        }
+
+        try {
+            const res = await fetch('/api/admin/flagged/clear', {
+                method: 'POST'
+            })
+
+            if (res.ok) {
+                setEmails([])
+                alert('All flagged emails cleared successfully!')
+            } else {
+                alert('Failed to clear flagged emails')
+            }
+        } catch (error) {
+            console.error('Error clearing flagged emails:', error)
+            alert('Failed to clear flagged emails')
+        }
+    }
+
     const getStatusBadge = (status: string) => {
         const colors: any = {
             flagged: 'bg-orange-100 text-orange-800',
@@ -57,6 +79,15 @@ export default function AdminFlagged() {
                             <AlertCircle className="w-8 h-8 text-orange-600" />
                             <h1 className="text-2xl font-bold text-gray-900">Flagged Emails</h1>
                         </div>
+                        {emails.length > 0 && (
+                            <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={handleClearAll}
+                            >
+                                Clear All Flagged
+                            </Button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -118,12 +149,12 @@ export default function AdminFlagged() {
                                             </div>
                                         )}
 
-                                        {email.ai_extraction && (
+                                        {email.ai_extraction_result && (
                                             <details className="mt-3">
                                                 <summary className="cursor-pointer text-sm text-blue-600 hover:text-blue-800">
                                                     View AI Extraction Details
                                                 </summary>
-                                                <pre className="bg-gray-50 p-3 rounded text-xs overflow-auto max-h-64 text-gray-900">
+                                                <pre className="mt-2 p-3 bg-gray-100 rounded text-xs overflow-x-auto text-gray-900">
                                                     {JSON.stringify(email.ai_extraction_result, null, 2)}
                                                 </pre>
                                             </details>

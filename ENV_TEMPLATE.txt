@@ -1,0 +1,50 @@
+# ========================================
+# RFQ AUTOMATION - ENVIRONMENT VARIABLES
+# ========================================
+# Copy these to Vercel: Settings → Environment Variables
+# Fill in your actual values below
+
+# ========================================
+# SUPABASE (Database & Auth)
+# ========================================
+# Get from: https://supabase.com → Your Project → Settings → API
+
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.your-anon-key-here
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.your-service-role-key-here
+
+# ========================================
+# GROQ AI (Product Matching)
+# ========================================
+# Get from: https://console.groq.com → API Keys → Create API Key
+
+GROQ_API_KEY=gsk_your-groq-api-key-here
+
+# ========================================
+# COMPANY INFORMATION (Quote PDF)
+# ========================================
+# This appears on every quote generated
+
+COMPANY_NAME=Tulsi Marketing
+COMPANY_EMAIL=contact@tulsimarketing.com
+COMPANY_PHONE=+91-80-XXXX-XXXX
+QUOTE_VALIDITY_DAYS=30
+
+# ========================================
+# ADMIN CONFIGURATION
+# ========================================
+
+ADMIN_EMAIL=admin@tulsimarketing.com
+
+# ========================================
+# HOW TO USE IN VERCEL:
+# ========================================
+# 1. Go to your Vercel project
+# 2. Settings → Environment Variables
+# 3. For EACH variable above:
+#    - Name: Copy variable name (e.g., NEXT_PUBLIC_SUPABASE_URL)
+#    - Value: Paste your actual value
+#    - Environments: Check ALL THREE (Production, Preview, Development)
+#    - Click "Add"
+# 4. Redeploy after adding all
+# ========================================

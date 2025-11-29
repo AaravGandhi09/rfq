@@ -60,7 +60,7 @@ export class EmailMonitor {
                 resolve()
             })
 
-            this.imap.once('error', (err) => {
+            this.imap.once('error', (err: Error) => {
                 console.error(`❌ IMAP error for ${this.account.email}:`, err)
                 reject(err)
             })

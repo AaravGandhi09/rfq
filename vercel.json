@@ -1,10 +1,4 @@
 {
     "buildCommand": "npm run build",
-    "outputDirectory": ".next",
-    "crons": [
-        {
-            "path": "/api/cron/check-emails",
-            "schedule": "*/15 * * * *"
-        }
-    ]
+    "outputDirectory": ".next"
 }

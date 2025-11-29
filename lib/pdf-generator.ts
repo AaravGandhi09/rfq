@@ -1,4 +1,5 @@
 import { jsPDF } from 'jspdf'
+import 'jspdf-autotable'
 
 interface QuoteItem {
   productName: string
@@ -25,80 +26,177 @@ interface QuoteData {
   validUntil: string
 }
 
+function numberToWords(num: number): string {
+  const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine']
+  const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety']
+  const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen']
+
+  if (num === 0) return 'Zero'
+
+  const crores = Math.floor(num / 10000000)
+  const lakhs = Math.floor((num % 10000000) / 100000)
+  const thousands = Math.floor((num % 100000) / 1000)
+  const hundreds = Math.floor((num % 1000) / 100)
+  const remainder = num % 100
+
+  let words = ''
+
+  if (crores > 0) words += ones[crores] + ' Crore '
+  if (lakhs > 0) words += (lakhs < 10 ? ones[lakhs] : (lakhs >= 10 && lakhs < 20 ? teens[lakhs - 10] : tens[Math.floor(lakhs / 10)] + ' ' + ones[lakhs % 10])) + ' Lakh '
+  if (thousands > 0) words += (thousands < 10 ? ones[thousands] : (thousands >= 10 && thousands < 20 ? teens[thousands - 10] : tens[Math.floor(thousands / 10)] + ' ' + ones[thousands % 10])) + ' Thousand '
+  if (hundreds > 0) words += ones[hundreds] + ' Hundred '
+  if (remainder > 0) {
+    if (remainder < 10) words += ones[remainder]
+    else if (remainder < 20) words += teens[remainder - 10]
+    else words += tens[Math.floor(remainder / 10)] + ' ' + ones[remainder % 10]
+  }
+
+  return 'Indian Rupee ' + words.trim() + ' Only'
+}
+
 export async function generateQuotePDF(data: QuoteData): Promise<Buffer> {
   try {
     const doc = new jsPDF()
-    let y = 20
+    const pageWidth = doc.internal.pageSize.getWidth()
+    let y = 15
 
-    // Header
-    doc.setFontSize(20)
-    doc.text('QUOTATION', 105, y, { align: 'center' })
-    y += 15
+    // Header - Company Info & Logo placeholder
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'bold')
+    doc.text('TULSI MARKETING', 20, y)
+    y += 5
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'normal')
+    doc.text('485, Chinmaya Mission Hospital Rd, Indiranagar 1st Stage', 20, y)
+    y += 4
+    doc.text('Bengaluru- 560038', 20, y)
 
-    // Company Info
-    doc.setFontSize(12)
-    doc.text('Tulsi Marketing', 20, y)
+    // Quotation Title (right side)
+    doc.setFontSize(18)
+    doc.setFont('helvetica', 'bold')
+    doc.text('Quotation', pageWidth - 20, 15, { align: 'right' })
+
+    // Quote Details (right side)
+    y = 25
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'normal')
+    doc.text(`Quotation No: ${data.quoteId}`, pageWidth - 20, y, { align: 'right' })
+    y += 5
+    doc.text(`Date: ${data.date}`, pageWidth - 20, y, { align: 'right' })
+    y += 5
+    doc.text(`Expiry: ${data.validUntil}`, pageWidth - 20, y, { align: 'right' })
     y += 7
-    doc.setFontSize(10)
-    doc.text('PAN: AAZPL3421B | GSTIN: 29AAZPL3421B1ZM', 20, y)
-    y += 12
+    doc.text('PAN: AAZPL3421B | GSTIN: 29AAZPL3421B1ZM', pageWidth - 20, y, { align: 'right' })
 
-    // Quote Details
-    doc.text(`Quote ID: ${data.quoteId}`, 20, y)
-    y += 7
-    doc.text(`Date: ${data.date}`, 20, y)
-    y += 7
-    doc.text(`Valid Until: ${data.validUntil}`, 20, y)
-    y += 12
+    y = 50
 
-    // Customer Details
-    doc.text(`Bill To: ${data.customerName}`, 20, y)
-    y += 7
-    if (data.companyName) {
-      doc.text(`Company: ${data.companyName}`, 20, y)
-      y += 7
-    }
-    if (data.customerGstin) {
-      doc.text(`GSTIN: ${data.customerGstin}`, 20, y)
-      y += 7
-    }
-    if (data.billingAddress) {
-      doc.text(`Address: ${data.billingAddress}`, 20, y)
-      y += 7
-    }
-    y += 10
-
-    // Table Header
+    // Bill To & Ship To
     doc.setFontSize(10)
     doc.setFont('helvetica', 'bold')
-    doc.text('Item', 20, y)
-    doc.text('Qty', 100, y)
-    doc.text('Price', 130, y)
-    doc.text('Total', 170, y)
-    y += 7
-    doc.setFont('helvetica', 'normal')
+    doc.text('Bill To', 20, y)
+    doc.text('Ship To', 110, y)
 
-    // Items
-    data.matchedItems.forEach((item) => {
-      doc.text(item.productName.substring(0, 40), 20, y)
-      doc.text(item.quantity.toString(), 100, y)
-      doc.text(`Rs ${item.unitPrice || 0}`, 130, y)
-      doc.text(`Rs ${item.total || 0}`, 170, y)
-      y += 7
+    y += 5
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(9)
+
+    const billTo = `${data.customerName}\n${data.companyName || ''}\n${data.billingAddress || ''}\n${data.customerGstin ? 'GSTIN: ' + data.customerGstin : ''}`
+    const shipTo = data.shippingAddress || data.billingAddress || ''
+
+    doc.text(billTo, 20, y, { maxWidth: 85 })
+    doc.text(shipTo, 110, y, { maxWidth: 85 })
+
+    y += 30
+
+    // Items Table
+    const tableData = data.matchedItems.map((item, index) => {
+      const rate = item.unitPrice || 0
+      const cgst = rate * 0.09
+      const sgst = rate * 0.09
+      const amount = item.total || 0
+
+      return [
+        item.productName,
+        item.hsnCode || '-',
+        item.quantity.toString(),
+        `₹${rate.toFixed(2)}`,
+        `₹${cgst.toFixed(2)}`,
+        `₹${sgst.toFixed(2)}`,
+        `₹${amount.toFixed(2)}`
+      ]
     })
 
-    y += 10
+      ; (doc as any).autoTable({
+        startY: y,
+        head: [['Description', 'HSN', 'Qty', 'Rate', 'CGST (9%)', 'SGST (9%)', 'Amount']],
+        body: tableData,
+        theme: 'grid',
+        headStyles: { fillColor: [243, 243, 243], textColor: [0, 0, 0], fontStyle: 'bold' },
+        styles: { fontSize: 9, cellPadding: 3 },
+        columnStyles: {
+          0: { cellWidth: 60 },
+          1: { cellWidth: 25 },
+          2: { cellWidth: 15 },
+          3: { cellWidth: 25, halign: 'right' },
+          4: { cellWidth: 25, halign: 'right' },
+          5: { cellWidth: 25, halign: 'right' },
+          6: { cellWidth: 25, halign: 'right' }
+        }
+      })
 
-    // Tax Calculations
+    y = (doc as any).lastAutoTable.finalY + 10
+
+    // Summary
     const { cgst, sgst, total } = calculateTax(data.subtotal)
-    doc.text(`Subtotal: Rs ${data.subtotal.toFixed(2)}`, 140, y)
-    y += 7
-    doc.text(`CGST (9%): Rs ${cgst.toFixed(2)}`, 140, y)
-    y += 7
-    doc.text(`SGST (9%): Rs ${sgst.toFixed(2)}`, 140, y)
-    y += 7
+    const summaryX = pageWidth - 70
+
+    doc.setFontSize(9)
+    doc.text('Sub Total:', summaryX, y)
+    doc.text(`₹${data.subtotal.toFixed(2)}`, pageWidth - 20, y, { align: 'right' })
+    y += 5
+    doc.text('CGST (9%):', summaryX, y)
+    doc.text(`₹${cgst.toFixed(2)}`, pageWidth - 20, y, { align: 'right' })
+    y += 5
+    doc.text('SGST (9%):', summaryX, y)
+    doc.text(`₹${sgst.toFixed(2)}`, pageWidth - 20, y, { align: 'right' })
+    y += 5
     doc.setFont('helvetica', 'bold')
-    doc.text(`Total: Rs ${total.toFixed(2)}`, 140, y)
+    doc.setFontSize(10)
+    doc.text('Total:', summaryX, y)
+    doc.text(`₹${total.toFixed(2)}`, pageWidth - 20, y, { align: 'right' })
+
+    y += 10
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(9)
+    const totalWords = numberToWords(Math.floor(total))
+    doc.text(`Total In Words: ${totalWords}`, 20, y, { maxWidth: pageWidth - 40 })
+
+    y += 15
+
+    // Terms & Conditions
+    doc.setFont('helvetica', 'bold')
+    doc.text('Terms & Conditions', 20, y)
+    y += 5
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(8)
+    doc.text('* PO to be raised in name of "Tulsi Marketing".', 20, y)
+    y += 4
+    doc.text('* Quote validity: 30 days.', 20, y)
+    y += 4
+    doc.text('* Delivery against confirmed PO only.', 20, y)
+    y += 4
+    doc.text('* Payment terms as per agreed terms.', 20, y)
+
+    // Authorized Signature
+    doc.setFontSize(9)
+    doc.text('Authorized Signature', pageWidth - 50, y + 10, { align: 'center' })
+
+    // Footer
+    y = doc.internal.pageSize.getHeight() - 20
+    doc.setFontSize(8)
+    doc.text('LUT: AD2904230038263 / UDYAM-KR-03-0067698', 20, y)
+    y += 4
+    doc.text('Tulsi Marketing — GSTIN 29AAZPL3421B1ZM | PAN: AAZPL3421B', 20, y)
 
     // Convert to Buffer
     const pdfArrayBuffer = doc.output('arraybuffer')
@@ -114,277 +212,4 @@ function calculateTax(subtotal: number) {
   const sgst = subtotal * 0.09 // 9% SGST
   const total = subtotal + cgst + sgst
   return { cgst, sgst, total }
-}
-
-function numberToWords(num: number): string {
-  const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine']
-  const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen']
-  const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety']
-
-  if (num === 0) return 'Zero'
-
-  const crore = Math.floor(num / 10000000)
-  const lakh = Math.floor((num % 10000000) / 100000)
-  const thousand = Math.floor((num % 100000) / 1000)
-  const hundred = Math.floor((num % 1000) / 100)
-  const remainder = num % 100
-
-  let words = ''
-
-  if (crore > 0) words += numberToWords(crore) + ' Crore '
-  if (lakh > 0) words += numberToWords(lakh) + ' Lakh '
-  if (thousand > 0) words += numberToWords(thousand) + ' Thousand '
-  if (hundred > 0) words += ones[hundred] + ' Hundred '
-
-  if (remainder >= 20) {
-    words += tens[Math.floor(remainder / 10)] + ' '
-    if (remainder % 10 > 0) words += ones[remainder % 10]
-  } else if (remainder >= 10) {
-    words += teens[remainder - 10]
-  } else if (remainder > 0) {
-    words += ones[remainder]
-  }
-
-  return words.trim() + ' Rupees Only'
-}
-
-function generateQuoteHTML(data: QuoteData): string {
-  const { quoteId, customerName, companyName, customerGstin, billingAddress, shippingAddress, matchedItems, date, validUntil } = data
-
-  const { cgst, sgst, total } = calculateTax(data.subtotal)
-  const totalInWords = numberToWords(Math.round(total))
-
-  // Image URLs
-  const logoUrl = '/images/tulsi-logo.png'
-  const stampUrl = '/images/tulsi-stamp.png'
-
-  // Format customer addresses
-  const billTo = `${companyName || customerName}${customerGstin ? '\nGSTIN: ' + customerGstin : ''}${billingAddress ? '\n' + billingAddress : ''}`
-  const shipTo = shippingAddress || billingAddress || 'Same as Billing Address'
-
-  return `
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <title>Quotation - Tulsi Marketing</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    :root {
-      --page-width: 210mm;
-      --page-height: 297mm;
-      --pad: 12mm;
-      --border: #bdbdbd;
-      font-family: Arial, Helvetica, sans-serif;
-      color: #222;
-    }
-
-    .quote-root {
-      width: calc(var(--page-width) - 2 * var(--pad));
-      margin: 12mm auto;
-      padding: 10px;
-      background: white;
-      font-size: 12px;
-    }
-
-    header { 
-      display:flex; 
-      justify-content:space-between; 
-      gap:12px; 
-      align-items:flex-start; 
-    }
-
-    header img {
-      height: 68px;
-      object-fit: contain;
-    }
-
-    h1 {
-      font-size: 18px;
-      margin: 0;
-    }
-
-    .meta {
-      text-align:right;
-      font-size:12px;
-    }
-
-    .addresses {
-      display:flex;
-      gap:12px;
-      margin-top:10px;
-    }
-
-    .addr {
-      flex:1;
-      border:1px solid var(--border);
-      padding:8px;
-      min-height:84px;
-      white-space:pre-line;
-    }
-
-    table.items {
-      width:100%;
-      border-collapse:collapse;
-      margin-top:10px;
-    }
-
-    table.items th,
-    table.items td {
-      border:1px solid #d6d6d6;
-      padding:6px 8px;
-    }
-
-    table.items th {
-      background:#f3f3f3;
-      font-weight:600;
-    }
-
-    .right { text-align:right; }
-
-    .summary {
-      margin-top:8px;
-      width:320px;
-      float:right;
-      border:1px solid var(--border);
-    }
-
-    .summary td {
-      border-bottom:1px solid #eee;
-      padding:6px 8px;
-    }
-
-    .summary tr.total td {
-      font-weight:700;
-      font-size:14px;
-    }
-
-    footer {
-      clear:both;
-      margin-top:22px;
-      border-top:1px dashed #ddd;
-      padding-top:10px;
-      font-size:11px;
-    }
-
-    @media print {
-      body { margin:0; -webkit-print-color-adjust:exact; }
-      .quote-root { margin:0; width:100%; }
-    }
-  </style>
-</head>
-<body>
-  <div class="quote-root">
-
-    <!-- HEADER -->
-    <header>
-      <div style="display:flex; flex-direction:column;">
-        <img src="${logoUrl}" alt="Tulsi Marketing Logo" />
-        <div style="margin-top:6px; font-size:11px;">
-          <strong>TULSI MARKETING</strong><br/>
-          485, Chinmaya Mission Hospital Rd, Indiranagar 1st Stage, Bengaluru- 560038
-        </div>
-        <div style="margin-top:6px">
-          PAN: <strong>AAZPL3421B</strong> | GSTIN: <strong>29AAZPL3421B1ZM</strong>
-        </div>
-      </div>
-
-      <div class="meta">
-        <h1>QUOTATION</h1>
-        <div>Quotation No: <strong>${quoteId}</strong></div>
-        <div>Date: <strong>${date}</strong></div>
-        <div>Expiry: <strong>${validUntil}</strong></div>
-      </div>
-    </header>
-
-    <!-- BILL / SHIP -->
-    <div class="addresses">
-      <div class="addr">
-        <strong>Bill To</strong><br/>
-        ${billTo}
-      </div>
-      <div class="addr">
-        <strong>Ship To</strong><br/>
-        ${shipTo}
-      </div>
-    </div>
-
-    <!-- ITEMS TABLE -->
-    <table class="items">
-      <thead>
-        <tr>
-          <th style="width:35%;">Description</th>
-          <th>HSN</th>
-          <th>Qty</th>
-          <th class="right">Rate</th>
-          <th class="right">CGST (9%)</th>
-          <th class="right">SGST (9%)</th>
-          <th class="right">Amount</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${matchedItems.map(item => {
-    const itemCgst = (item.unitPrice || 0) * item.quantity * 0.09
-    const itemSgst = (item.unitPrice || 0) * item.quantity * 0.09
-    return `
-            <tr>
-              <td>${item.productName}${item.specifications ? '<br/><small>' + item.specifications + '</small>' : ''}</td>
-              <td>${item.hsnCode || '-'}</td>
-              <td>${item.quantity}</td>
-              <td class="right">₹${(item.unitPrice || 0).toFixed(2)}</td>
-              <td class="right">₹${itemCgst.toFixed(2)}</td>
-              <td class="right">₹${itemSgst.toFixed(2)}</td>
-              <td class="right">₹${(item.total || 0).toFixed(2)}</td>
-            </tr>
-          `
-  }).join('')}
-      </tbody>
-    </table>
-
-    <!-- SUMMARY -->
-    <div class="summary">
-      <table>
-        <tbody>
-          <tr><td>Sub Total</td><td class="right">₹${data.subtotal.toFixed(2)}</td></tr>
-          <tr><td>CGST (9%)</td><td class="right">₹${cgst.toFixed(2)}</td></tr>
-          <tr><td>SGST (9%)</td><td class="right">₹${sgst.toFixed(2)}</td></tr>
-          <tr class="total"><td>Total</td><td class="right">₹${total.toFixed(2)}</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <p style="clear:both; margin-top:14px">
-      <strong>Total In Words:</strong> ${totalInWords}
-    </p>
-
-    <!-- FOOTER -->
-    <footer>
-      <div style="display:flex; justify-content:space-between;">
-        <div style="max-width:65%;">
-          <div style="font-weight:700">Terms & Conditions</div>
-          <div>
-            * PO to be raised in name of "Tulsi Marketing".<br/>
-            * Quote validity: 30 days.<br/>
-            * Delivery against confirmed PO only.
-          </div>
-        </div>
-
-        <div style="text-align:center;">
-          <div style="margin-bottom:6px">Authorized Signature</div>
-          <div style="display:inline-block; border:1px solid #d0d0d0; padding:8px;">
-            <img src="${stampUrl}" alt="Company Stamp" style="width:60px; opacity:0.45" />
-          </div>
-        </div>
-      </div>
-
-      <div style="margin-top:8px; font-size:11px;">
-        <div>LUT: / UDYAM-KR-03-0067698AD2904230038263</div>
-        Tulsi Marketing — GSTIN 29AAZPL3421B1ZM | PAN: AAZPL3421B
-      </div>
-    </footer>
-
-  </div>
-</body>
-</html>
-  `
 }

@@ -6,13 +6,6 @@ export const dynamic = 'force-dynamic'
 export const maxDuration = 60 // Maximum execution time
 
 export async function GET(request: Request) {
-    const authHeader = request.headers.get('authorization')
-
-    // Verify cron secret to prevent unauthorized access
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     try {
         console.log('🔄 Starting email check...')
 

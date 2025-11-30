@@ -210,28 +210,38 @@ export async function generateQuotePDF(data: QuoteData): Promise<Buffer> {
       y += 4
       doc.text('* Payment terms as per agreed terms.', 20, y)
 
+      y += 10
+      doc.setFont('helvetica', 'normal')
       doc.setFontSize(9)
-      doc.text('Authorized Signature', pageWidth - 50, y + 10, { align: 'center' })
+      doc.text('For TULSI MARKETING', 150, y)
 
+      // Add stamp (signature area)
+      try {
+        doc.addImage(stampUrl, 'PNG', 155, y + 5, 25, 25)
+      } catch (err) {
+        console.log('Stamp load failed, continuing without stamp')
+      }
+
+      y += 35
       // Footer
       y = doc.internal.pageSize.getHeight() - 20
       doc.setFontSize(8)
       doc.text('LUT: AD2904230038263 / UDYAM-KR-03-0067698', 20, y)
       y += 4
-      doc.text('Tulsi Marketing — GSTIN 29AAZPL3421B1ZM | PAN: AAZPL3421B', 20, y)
+      doc.text('Email: sales@tulsimarketing.com | Phone: +91-80-41510775', 20, y)
 
-      // Convert to Buffer
-      const pdfArrayBuffer = doc.output('arraybuffer')
-      return Buffer.from(pdfArrayBuffer)
-    } catch (error) {
+      const pdfBuffer = Buffer.from(doc.output('arraybuffer'))
+      resolve(pdfBuffer)
+    } catch (error: any) {
       console.error('PDF generation error:', error)
-      throw error
+      reject(error)
     }
-  }
+  })
+}
 
 function calculateTax(subtotal: number) {
-      const cgst = subtotal * 0.09 // 9% CGST
-      const sgst = subtotal * 0.09 // 9% SGST
-      const total = subtotal + cgst + sgst
-      return { cgst, sgst, total }
-    }
+  const cgst = subtotal * 0.09 // 9% CGST
+  const sgst = subtotal * 0.09 // 9% SGST
+  const total = subtotal + cgst + sgst
+  return { cgst, sgst, total }
+}

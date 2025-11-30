@@ -22,7 +22,8 @@ export default function AdminProducts() {
         description: '',
         specifications: '',
         category: '',
-        base_price: '',
+        mrp: '',  // MRP inclusive of GST
+        base_price: '',  // Auto-calculated from MRP
         min_price: '',
         max_price: '',
         unit: '',
@@ -35,6 +36,18 @@ export default function AdminProducts() {
         processor: '',
         gpu: ''
     })
+
+    // Auto-calculate base price from MRP
+    const handleMRPChange = (mrp: string) => {
+        const mrpValue = parseFloat(mrp)
+        if (mrpValue && !isNaN(mrpValue)) {
+            // Base price = MRP / 1.18 (remove 18% GST)
+            const basePrice = (mrpValue / 1.18).toFixed(2)
+            setFormData({ ...formData, mrp, base_price: basePrice })
+        } else {
+            setFormData({ ...formData, mrp, base_price: '' })
+        }
+    }
     useEffect(() => {
         const session = localStorage.getItem('admin_session')
         if (!session) {
@@ -82,7 +95,7 @@ export default function AdminProducts() {
 
             if (res.ok) {
                 setShowAddForm(false)
-                setFormData({ name: '', description: '', specifications: '', category: '', base_price: '', min_price: '', max_price: '', unit: '', sku: '', hsn_code: '', is_active: true, storage: '', ram: '', processor: '', gpu: '' })
+                setFormData({ name: '', description: '', specifications: '', category: '', mrp: '', base_price: '', min_price: '', max_price: '', unit: '', sku: '', hsn_code: '', is_active: true, storage: '', ram: '', processor: '', gpu: '' })
                 setProductCategory('other')
                 fetchProducts()
             }
@@ -147,6 +160,7 @@ export default function AdminProducts() {
             description: product.description || '',
             specifications: product.specifications || '',
             category: product.category || '',
+            mrp: product.mrp?.toString() || '',
             base_price: product.base_price.toString(),
             min_price: product.min_price?.toString() || '',
             max_price: product.max_price?.toString() || '',
@@ -176,7 +190,7 @@ export default function AdminProducts() {
                     max_price: parseFloat(formData.max_price)
                 })
             })
-
+            setFormData({ name: '', description: '', specifications: '', category: '', mrp: '', base_price: '', min_price: '', max_price: '', unit: '', sku: '', hsn_code: '', is_active: true, storage: '', ram: '', processor: '', gpu: '' })
             if (res.ok) {
                 setEditingId(null)
                 setFormData({ name: '', description: '', specifications: '', category: '', base_price: '', min_price: '', max_price: '', unit: '', sku: '', hsn_code: '', is_active: true, storage: '', ram: '', processor: '', gpu: '' })
@@ -303,21 +317,47 @@ export default function AdminProducts() {
                                         <Input value={formData.specifications} onChange={(e) => setFormData({ ...formData, specifications: e.target.value })} placeholder="Any specific details" />
                                     </div>
                                 )}
+
+                                {/* Pricing Section */}
+                                <div className="col-span-2">
+                                    <hr className="my-2" />
+                                    <h3 className="font-bold text-gray-900 mb-2">💰 Pricing</h3>
+                                </div>
+
                                 <div>
-                                    <Label className="text-gray-900">Base Price</Label>
-                                    <Input type="number" step="0.01" value={formData.base_price} onChange={(e) => setFormData({ ...formData, base_price: e.target.value })} required />
+                                    <Label className="text-gray-900">MRP (incl. GST) *</Label>
+                                    <Input
+                                        type="number"
+                                        step="0.01"
+                                        value={formData.mrp}
+                                        onChange={(e) => handleMRPChange(e.target.value)}
+                                        placeholder="e.g. 11800.00"
+                                        required
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">Maximum Retail Price (includes 18% GST)</p>
                                 </div>
                                 <div>
-                                    <Label className="text-gray-900">Min Price</Label>
-                                    <Input type="number" step="0.01" value={formData.min_price} onChange={(e) => setFormData({ ...formData, min_price: e.target.value })} required />
+                                    <Label className="text-gray-900">Base Price (excl. GST)</Label>
+                                    <Input
+                                        type="number"
+                                        step="0.01"
+                                        value={formData.base_price}
+                                        disabled
+                                        className="bg-gray-100"
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">Auto-calculated from MRP</p>
                                 </div>
                                 <div>
-                                    <Label className="text-gray-900">Max Price</Label>
-                                    <Input type="number" step="0.01" value={formData.max_price} onChange={(e) => setFormData({ ...formData, max_price: e.target.value })} required />
+                                    <Label className="text-gray-900">Min Selling Price *</Label>
+                                    <Input type="number" step="0.01" value={formData.min_price} onChange={(e) => setFormData({ ...formData, min_price: e.target.value })} placeholder="Minimum you'll sell for" required />
+                                </div>
+                                <div>
+                                    <Label className="text-gray-900">Max Selling Price *</Label>
+                                    <Input type="number" step="0.01" value={formData.max_price} onChange={(e) => setFormData({ ...formData, max_price: e.target.value })} placeholder="Maximum you'll sell for" required />
                                 </div>
                                 <div>
                                     <Label className="text-gray-900">Unit</Label>
-                                    <Input value={formData.unit} onChange={(e) => setFormData({ ...formData, unit: e.target.value })} />
+                                    <Input value={formData.unit} onChange={(e) => setFormData({ ...formData, unit: e.target.value })} placeholder="pcs, box, etc." />
                                 </div>
                                 <div className="col-span-2 flex gap-2">
                                     <Button type="submit">Save Product</Button>

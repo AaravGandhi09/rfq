@@ -82,7 +82,7 @@ export default function AdminProducts() {
 
             if (res.ok) {
                 setShowAddForm(false)
-                setFormData({ name: '', description: '', specifications: '', category: '', base_price: '', min_price: '', max_price: '', unit: '', sku: '', hsn_code: '', is_active: true, storage: '', ram: '', processor: '' })
+                setFormData({ name: '', description: '', specifications: '', category: '', base_price: '', min_price: '', max_price: '', unit: '', sku: '', hsn_code: '', is_active: true, storage: '', ram: '', processor: '', gpu: '' })
                 setProductCategory('other')
                 fetchProducts()
             }

@@ -109,7 +109,7 @@ export async function generateQuotePDF(data: QuoteData): Promise<Buffer> {
     y += 30
 
     // Items Table
-    const tableData = data.matchedItems.map((item, index) => {
+    const tableData = data.matchedItems.map((item) => {
       const rate = item.unitPrice || 0
       const cgst = rate * 0.09
       const sgst = rate * 0.09
@@ -119,10 +119,10 @@ export async function generateQuotePDF(data: QuoteData): Promise<Buffer> {
         item.productName,
         item.hsnCode || '-',
         item.quantity.toString(),
-        `₹${rate.toFixed(2)}`,
-        `₹${cgst.toFixed(2)}`,
-        `₹${sgst.toFixed(2)}`,
-        `₹${amount.toFixed(2)}`
+        rate.toFixed(2),
+        cgst.toFixed(2),
+        sgst.toFixed(2),
+        amount.toFixed(2)
       ]
     })
 
@@ -131,16 +131,31 @@ export async function generateQuotePDF(data: QuoteData): Promise<Buffer> {
       head: [['Description', 'HSN', 'Qty', 'Rate', 'CGST (9%)', 'SGST (9%)', 'Amount']],
       body: tableData,
       theme: 'grid',
-      headStyles: { fillColor: [243, 243, 243], textColor: [0, 0, 0], fontStyle: 'bold' },
-      styles: { fontSize: 9, cellPadding: 3 },
+      headStyles: {
+        fillColor: [243, 243, 243],
+        textColor: [0, 0, 0],
+        fontStyle: 'bold',
+        halign: 'center'
+      },
+      styles: {
+        fontSize: 9,
+        cellPadding: 3,
+        halign: 'center'  // Center all cells
+      },
       columnStyles: {
-        0: { cellWidth: 60 },
-        1: { cellWidth: 25 },
-        2: { cellWidth: 15 },
-        3: { cellWidth: 25, halign: 'right' },
-        4: { cellWidth: 25, halign: 'right' },
-        5: { cellWidth: 25, halign: 'right' },
-        6: { cellWidth: 25, halign: 'right' }
+        0: { cellWidth: 60, halign: 'left' },  // Description left-aligned
+        1: { cellWidth: 25, halign: 'center' }, // HSN centered
+        2: { cellWidth: 15, halign: 'center' }, // Qty centered
+        3: { cellWidth: 25, halign: 'right' },  // Rate right-aligned
+        4: { cellWidth: 25, halign: 'right' },  // CGST right-aligned
+        5: { cellWidth: 25, halign: 'right' },  // SGST right-aligned
+        6: { cellWidth: 25, halign: 'right' }   // Amount right-aligned
+      },
+      didParseCell: function (data) {
+        // Remove any currency symbols from the parsed data to avoid jsPDF issues
+        if (data.cell.section === 'body' && data.column.index >= 3) {
+          data.cell.text = [data.cell.raw.toString()]
+        }
       }
     })
 

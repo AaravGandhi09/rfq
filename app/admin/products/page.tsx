@@ -193,7 +193,7 @@ export default function AdminProducts() {
             setFormData({ name: '', description: '', specifications: '', category: '', mrp: '', base_price: '', min_price: '', max_price: '', unit: '', sku: '', hsn_code: '', is_active: true, storage: '', ram: '', processor: '', gpu: '' })
             if (res.ok) {
                 setEditingId(null)
-                setFormData({ name: '', description: '', specifications: '', category: '', base_price: '', min_price: '', max_price: '', unit: '', sku: '', hsn_code: '', is_active: true, storage: '', ram: '', processor: '', gpu: '' })
+                setFormData({ name: '', description: '', specifications: '', category: '', mrp: '', base_price: '', min_price: '', max_price: '', unit: '', sku: '', hsn_code: '', is_active: true, storage: '', ram: '', processor: '', gpu: '' })
                 fetchProducts()
             }
         } catch (error) {

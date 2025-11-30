@@ -148,6 +148,7 @@ export default function AdminProducts() {
             ? (specs?.includes('Processor:') ? 'laptop' : 'phone')
             : 'other'
         setProductCategory(detectedCategory)
+        console.log('Edit Product - Detected Category:', detectedCategory, 'Specs:', specs)
 
         // Parse specs for phone/laptop
         const storageMatch = specs.match(/Storage:\s*([^,|]+)/)
@@ -173,6 +174,7 @@ export default function AdminProducts() {
             processor: processorMatch ? processorMatch[1].trim() : '',
             gpu: gpuMatch ? gpuMatch[1].trim() : ''
         })
+        console.log('Form Data Set:', formData)
         setShowAddForm(true)
     }
 

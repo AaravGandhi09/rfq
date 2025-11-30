@@ -149,18 +149,17 @@ export default function AdminFlagged() {
                                             </div>
                                         )}
 
-                                        {/* AI Extraction Result */}
-                                        {email.ai_extraction_result && (
-                                            <div className="mt-4 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
-                                                <div className="flex items-center gap-2 mb-3">
-                                                    <span className="text-blue-600 text-lg">🤖</span>
-                                                    <h4 className="font-bold text-sm" style={{ color: '#000' }}>AI EXTRACTION (What AI Read)</h4>
-                                                </div>
-                                                <pre className="text-xs whitespace-pre-wrap font-mono bg-white p-3 rounded border border-blue-100 max-h-64 overflow-auto" style={{ color: '#000' }}>
-                                                    {JSON.stringify(email.ai_extraction_result, null, 2)}
-                                                </pre>
+                                        {/* AI Extraction Result - ALWAYS VISIBLE */}
+                                        <div className="mt-4 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <span className="text-blue-600 text-lg">🤖</span>
+                                                <h4 className="font-bold text-sm" style={{ color: '#000' }}>AI EXTRACTION (What AI Read)</h4>
                                             </div>
-                                        )}
+                                            <pre className="text-xs whitespace-pre-wrap font-mono bg-white p-3 rounded border border-blue-100 max-h-64 overflow-auto" style={{ color: '#000' }}>
+                                                {email.ai_extraction ? JSON.stringify(email.ai_extraction, null, 2) : 'No AI extraction data available for this email.'}
+                                            </pre>
+                                        </div>
+
 
                                         {/* Confidence Reasoning */}
                                         {email.confidence_score !== null && email.confidence_score !== undefined && (
@@ -177,8 +176,8 @@ export default function AdminFlagged() {
                                                     ) : (
                                                         <p>❌ <strong>Low Confidence:</strong> Email is unclear or doesn't contain typical RFQ patterns. May need manual review to determine if it's a genuine quote request.</p>
                                                     )}
-                                                    {email.ai_extraction_result?.error && (
-                                                        <p className="mt-2 text-red-600"><strong>AI Error:</strong> {email.ai_extraction_result.error}</p>
+                                                    {email.ai_extraction?.error && (
+                                                        <p className="mt-2 text-red-600"><strong>AI Error:</strong> {email.ai_extraction.error}</p>
                                                     )}
                                                 </div>
                                             </div>

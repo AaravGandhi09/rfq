@@ -61,16 +61,8 @@ export async function generateQuotePDF(data: QuoteData): Promise<Buffer> {
       const pageWidth = doc.internal.pageSize.getWidth()
       let y = 20
 
-      // Load logo and stamp from URLs
-      const logoUrl = 'https://thumbs2.imgbox.com/4e/85/pGS8V6Op_t.png'
-      const stampUrl = 'https://thumbs2.imgbox.com/db/91/h7Asx5WS_t.png'
-
-      // Add logo to header (top-left)
-      try {
-        doc.addImage(logoUrl, 'PNG', 15, y, 40, 15); // Directly use logoUrl
-      } catch (err) {
-        console.log('Logo load failed, continuing without logo');
-      }
+      // Note: Logo/stamp images can't be loaded from external URLs in serverless environment
+      // To add logo/stamp, you need to convert them to base64 and embed them
 
       // Header - Company Name
       doc.setFont('helvetica', 'bold')
@@ -102,17 +94,26 @@ export async function generateQuotePDF(data: QuoteData): Promise<Buffer> {
 
       y += 30
 
-      // Customer Details
+      // Customer Details - Bill To & Ship To
       doc.setFont('helvetica', 'bold')
       doc.text('Bill To:', 15, y)
       doc.text('Ship To:', 105, y)
 
       doc.setFont('helvetica', 'normal')
-      doc.text(data.customerName, 15, y + 5)
-      doc.text(data.customerEmail, 15, y + 10)
 
-      doc.text(data.customerName, 105, y + 5)
-      doc.text(data.customerEmail, 105, y + 10)
+      // Bill To - Customer details
+      const billToText = [
+        data.customerName,
+        data.companyName || '',
+        data.billingAddress || data.customerEmail,
+        data.customerGstin ? `GSTIN: ${data.customerGstin}` : ''
+      ].filter(Boolean).join('\n')
+
+      doc.text(billToText, 15, y + 5, { maxWidth: 85 })
+
+      // Ship To - Same as billing or separate
+      const shipToText = data.shippingAddress || data.billingAddress || data.customerEmail
+      doc.text(shipToText, 105, y + 5, { maxWidth: 85 })
 
       y += 30
 
@@ -215,14 +216,11 @@ export async function generateQuotePDF(data: QuoteData): Promise<Buffer> {
       doc.setFontSize(9)
       doc.text('For TULSI MARKETING', 150, y)
 
-      // Add stamp (signature area)
-      try {
-        doc.addImage(stampUrl, 'PNG', 155, y + 5, 25, 25)
-      } catch (err) {
-        console.log('Stamp load failed, continuing without stamp')
-      }
+      // Note: Stamp image can't be loaded from external URL in serverless
+      // To add stamp, convert to base64 and embed
 
-      y += 35
+      y += 20
+      doc.text('Authorized Signatory', 150, y)
       // Footer
       y = doc.internal.pageSize.getHeight() - 20
       doc.setFontSize(8)

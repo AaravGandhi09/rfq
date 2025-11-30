@@ -1,5 +1,5 @@
 import { jsPDF } from 'jspdf'
-import 'jspdf-autotable'
+import autoTable from 'jspdf-autotable'
 
 interface QuoteItem {
   productName: string
@@ -126,23 +126,23 @@ export async function generateQuotePDF(data: QuoteData): Promise<Buffer> {
       ]
     })
 
-      ; (doc as any).autoTable({
-        startY: y,
-        head: [['Description', 'HSN', 'Qty', 'Rate', 'CGST (9%)', 'SGST (9%)', 'Amount']],
-        body: tableData,
-        theme: 'grid',
-        headStyles: { fillColor: [243, 243, 243], textColor: [0, 0, 0], fontStyle: 'bold' },
-        styles: { fontSize: 9, cellPadding: 3 },
-        columnStyles: {
-          0: { cellWidth: 60 },
-          1: { cellWidth: 25 },
-          2: { cellWidth: 15 },
-          3: { cellWidth: 25, halign: 'right' },
-          4: { cellWidth: 25, halign: 'right' },
-          5: { cellWidth: 25, halign: 'right' },
-          6: { cellWidth: 25, halign: 'right' }
-        }
-      })
+    autoTable(doc, {
+      startY: y,
+      head: [['Description', 'HSN', 'Qty', 'Rate', 'CGST (9%)', 'SGST (9%)', 'Amount']],
+      body: tableData,
+      theme: 'grid',
+      headStyles: { fillColor: [243, 243, 243], textColor: [0, 0, 0], fontStyle: 'bold' },
+      styles: { fontSize: 9, cellPadding: 3 },
+      columnStyles: {
+        0: { cellWidth: 60 },
+        1: { cellWidth: 25 },
+        2: { cellWidth: 15 },
+        3: { cellWidth: 25, halign: 'right' },
+        4: { cellWidth: 25, halign: 'right' },
+        5: { cellWidth: 25, halign: 'right' },
+        6: { cellWidth: 25, halign: 'right' }
+      }
+    })
 
     y = (doc as any).lastAutoTable.finalY + 10
 

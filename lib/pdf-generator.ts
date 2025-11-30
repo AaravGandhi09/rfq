@@ -153,7 +153,7 @@ export async function generateQuotePDF(data: QuoteData): Promise<Buffer> {
       },
       didParseCell: function (data) {
         // Remove any currency symbols from the parsed data to avoid jsPDF issues
-        if (data.cell.section === 'body' && data.column.index >= 3) {
+        if (data.cell.section === 'body' && data.column.index >= 3 && data.cell.raw) {
           data.cell.text = [data.cell.raw.toString()]
         }
       }

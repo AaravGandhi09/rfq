@@ -32,7 +32,8 @@ export default function AdminProducts() {
         // Phone/Laptop specific
         storage: '',
         ram: '',
-        processor: ''
+        processor: '',
+        gpu: ''
     })
     useEffect(() => {
         const session = localStorage.getItem('admin_session')
@@ -63,7 +64,7 @@ export default function AdminProducts() {
         if (productCategory === 'phone') {
             specifications = `Storage: ${formData.storage}, RAM: ${formData.ram}`
         } else if (productCategory === 'laptop') {
-            specifications = `Storage: ${formData.storage}, RAM: ${formData.ram}, Processor: ${formData.processor}`
+            specifications = `Storage: ${formData.storage}, RAM: ${formData.ram}, Processor: ${formData.processor}, GPU: ${formData.gpu}`
         }
 
         try {
@@ -139,6 +140,7 @@ export default function AdminProducts() {
         const storageMatch = specs.match(/Storage:\s*([^,|]+)/)
         const ramMatch = specs.match(/RAM:\s*([^,|]+)/)
         const processorMatch = specs.match(/Processor:\s*([^,|]+)/)
+        const gpuMatch = specs.match(/GPU:\s*([^,|]+)/)
 
         setFormData({
             name: product.name,
@@ -154,7 +156,8 @@ export default function AdminProducts() {
             is_active: product.is_active,
             storage: storageMatch ? storageMatch[1].trim() : '',
             ram: ramMatch ? ramMatch[1].trim() : '',
-            processor: processorMatch ? processorMatch[1].trim() : ''
+            processor: processorMatch ? processorMatch[1].trim() : '',
+            gpu: gpuMatch ? gpuMatch[1].trim() : ''
         })
         setShowAddForm(true)
     }
@@ -176,7 +179,7 @@ export default function AdminProducts() {
 
             if (res.ok) {
                 setEditingId(null)
-                setFormData({ name: '', description: '', specifications: '', category: '', base_price: '', min_price: '', max_price: '', unit: '', sku: '', hsn_code: '', is_active: true, storage: '', ram: '', processor: '' })
+                setFormData({ name: '', description: '', specifications: '', category: '', base_price: '', min_price: '', max_price: '', unit: '', sku: '', hsn_code: '', is_active: true, storage: '', ram: '', processor: '', gpu: '' })
                 fetchProducts()
             }
         } catch (error) {
@@ -286,6 +289,10 @@ export default function AdminProducts() {
                                         <div className="col-span-2">
                                             <Label className="text-gray-900">Processor *</Label>
                                             <Input value={formData.processor} onChange={(e) => setFormData({ ...formData, processor: e.target.value })} placeholder="e.g. Intel i5, Apple M1" required />
+                                        </div>
+                                        <div className="col-span-2">
+                                            <Label className="text-gray-900">Graphics Card (GPU) *</Label>
+                                            <Input value={formData.gpu} onChange={(e) => setFormData({ ...formData, gpu: e.target.value })} placeholder="e.g. NVIDIA RTX 3050, Integrated" required />
                                         </div>
                                     </>
                                 )}

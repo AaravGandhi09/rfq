@@ -22,33 +22,47 @@ export async function GET(request: Request) {
         const results: any[] = []
 
         for (const account of accounts) {
+            let processedCount = 0
+            let errorCount = 0
             try {
-                console.log(`\n📬 Checking ${account.email}...`)
+                console.log(`\n📧 Checking ${account.email}...`)
 
                 const monitor = new EmailMonitor(account)
                 await monitor.connect()
 
-                const emails = await monitor.fetchNewEmails()
+                const newEmails = await monitor.fetchNewEmails()
 
-                console.log(`Found ${emails.length} new emails in ${account.email}`)
+                console.log(`📬 Found ${newEmails.length} new emails in ${account.email}`)
 
-                for (const email of emails) {
-                    await processEmail(email, account.id)
-                    totalProcessed++
+                for (const email of newEmails) {
+                    try {
+                        await processEmail(email, account.id)
+                        processedCount++
+                        totalProcessed++
+
+                        // Mark email as SEEN after successful processing
+                        await monitor.markAsSeen(email.messageId)
+                        console.log(`✅ Marked email as SEEN: ${email.messageId}`)
+                    } catch (error: any) {
+                        console.error(`❌ Error processing email (ID: ${email.messageId}):`, error)
+                        errorCount++
+                    }
                 }
 
                 await monitor.disconnect()
 
                 results.push({
                     account: account.email,
-                    processed: emails.length,
+                    processed: processedCount,
+                    errors: errorCount,
                     status: 'success'
                 })
             } catch (error: any) {
-                console.error(`Error processing ${account.email}:`, error)
+                console.error(`Error connecting or fetching emails for ${account.email}:`, error)
                 results.push({
                     account: account.email,
-                    processed: 0,
+                    processed: processedCount,
+                    errors: errorCount,
                     status: 'error',
                     error: error.message
                 })

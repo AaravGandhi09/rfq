@@ -198,10 +198,52 @@ export class EmailMonitor {
     }
 
     async disconnect(): Promise<void> {
-        if (this.imap) {
-            this.imap.end()
-            this.imap = null
+        return new Promise((resolve) => {
+            if (this.imap) {
+                this.imap.end()
+                console.log(`👋 Disconnected from ${this.account.email}`)
+            }
+            resolve()
+        })
+    }
+
+    async markAsSeen(messageId: string): Promise<void> {
+        if (!this.imap) {
+            throw new Error('IMAP not connected')
         }
+
+        return new Promise((resolve, reject) => {
+            this.imap!.openBox('INBOX', false, (err) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+
+                // Search for the message by Message-ID
+                this.imap!.search([['HEADER', 'MESSAGE-ID', messageId]], (searchErr, results) => {
+                    if (searchErr) {
+                        reject(searchErr)
+                        return
+                    }
+
+                    if (!results || results.length === 0) {
+                        console.log(`⚠️ Email not found for marking: ${messageId}`)
+                        resolve()
+                        return
+                    }
+
+                    // Mark as SEEN
+                    this.imap!.addFlags(results, ['\\Seen'], (flagErr) => {
+                        if (flagErr) {
+                            reject(flagErr)
+                            return
+                        }
+                        console.log(`✅ Marked as SEEN: ${messageId}`)
+                        resolve()
+                    })
+                })
+            })
+        })
     }
 
     private decryptPassword(encrypted: string): string {

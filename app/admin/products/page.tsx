@@ -202,10 +202,7 @@ export default function AdminProducts() {
                     base_price: parseFloat(formData.base_price),
                     min_price: parseFloat(formData.min_price),
                     max_price: parseFloat(formData.max_price),
-                    // mrp: formData.mrp ? parseFloat(formData.mrp) : null, // Commented until DB migration
                     unit: formData.unit,
-                    sku: formData.sku,
-                    hsn_code: formData.hsn_code,
                     is_active: formData.is_active
                 })
             })

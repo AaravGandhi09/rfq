@@ -149,6 +149,17 @@ export default function AdminFlagged() {
                                             </div>
                                         )}
 
+                                        {/* DEBUG SECTION - SHOWS ALL EMAIL DATA */}
+                                        <div className="mt-4 p-4 bg-red-50 border-2 border-red-300 rounded-lg">
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <span className="text-red-600 text-lg">🔍</span>
+                                                <h4 className="font-bold text-sm" style={{ color: '#000' }}>DEBUG: ALL EMAIL FIELDS</h4>
+                                            </div>
+                                            <pre className="text-xs whitespace-pre-wrap font-mono bg-white p-3 rounded border border-red-100 max-h-64 overflow-auto" style={{ color: '#000' }}>
+                                                {JSON.stringify(email, null, 2)}
+                                            </pre>
+                                        </div>
+
                                         {/* AI Extraction Result - ALWAYS VISIBLE */}
                                         <div className="mt-4 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
                                             <div className="flex items-center gap-2 mb-3">

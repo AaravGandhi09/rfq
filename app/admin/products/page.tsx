@@ -144,8 +144,8 @@ export default function AdminProducts() {
 
         // Detect product category from specifications
         const specs = product.specifications || ''
-        const detectedCategory = specs.includes('Storage:') || specs.includes('RAM:')
-            ? (specs.includes('Processor:') ? 'laptop' : 'phone')
+        const detectedCategory = (specs?.includes('Storage:') || specs?.includes('RAM:'))
+            ? (specs?.includes('Processor:') ? 'laptop' : 'phone')
             : 'other'
         setProductCategory(detectedCategory)
 

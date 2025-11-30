@@ -118,8 +118,8 @@ export default function AdminFlagged() {
                                                     <span className={`px-2 py-1 rounded text-xs font-semibold ${getStatusBadge(email.status)}`}>
                                                         {email.status.toUpperCase()}
                                                     </span>
-                                                    {email.confidence_score > 0 && (
-                                                        <span className="text-xs text-gray-900">
+                                                    {email.confidence_score !== null && email.confidence_score !== undefined && (
+                                                        <span className="px-2 py-1 rounded bg-blue-100 text-blue-800 text-xs font-semibold">
                                                             Confidence: {email.confidence_score.toFixed(1)}%
                                                         </span>
                                                     )}
@@ -150,14 +150,19 @@ export default function AdminFlagged() {
                                         )}
 
                                         {email.ai_extraction_result && (
-                                            <details className="mt-3">
-                                                <summary className="cursor-pointer text-sm text-blue-600 hover:text-blue-800">
-                                                    View AI Extraction Details
-                                                </summary>
-                                                <pre className="mt-2 p-3 bg-gray-100 rounded text-xs overflow-x-auto text-gray-900">
-                                                    {JSON.stringify(email.ai_extraction_result, null, 2)}
-                                                </pre>
-                                            </details>
+                                            <div className="mt-3">
+                                                <details>
+                                                    <summary className="cursor-pointer text-sm font-semibold text-blue-600 hover:text-blue-800 mb-2">
+                                                        📄 View AI Extraction (What AI Read)
+                                                    </summary>
+                                                    <div className="mt-2 p-4 bg-gray-50 border border-gray-200 rounded">
+                                                        <div className="text-xs font-semibold text-gray-900 mb-2">AI EXTRACTED DATA:</div>
+                                                        <pre className="text-xs text-gray-900 whitespace-pre-wrap font-mono">
+                                                            {JSON.stringify(email.ai_extraction_result, null, 2)}
+                                                        </pre>
+                                                    </div>
+                                                </details>
+                                            </div>
                                         )}
                                     </div>
                                 ))}

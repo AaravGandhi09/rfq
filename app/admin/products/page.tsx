@@ -143,9 +143,9 @@ export default function AdminProducts() {
         setEditingId(product.id)
 
         // Detect product category from specifications
-        const specs = product.specifications || ''
-        const detectedCategory = (specs?.includes('Storage:') || specs?.includes('RAM:'))
-            ? (specs?.includes('Processor:') ? 'laptop' : 'phone')
+        const specs = String(product.specifications || '')
+        const detectedCategory = (specs.includes('Storage:') || specs.includes('RAM:'))
+            ? (specs.includes('Processor:') ? 'laptop' : 'phone')
             : 'other'
         setProductCategory(detectedCategory)
         console.log('Edit Product - Detected Category:', detectedCategory, 'Specs:', specs)

@@ -149,21 +149,41 @@ export default function AdminFlagged() {
                                             </div>
                                         )}
 
+                                        {/* AI Extraction Result */}
                                         {email.ai_extraction_result && (
-                                            <div className="mt-3">
-                                                <details>
-                                                    <summary className="cursor-pointer text-sm font-semibold text-blue-600 hover:text-blue-800 mb-2">
-                                                        📄 View AI Extraction (What AI Read)
-                                                    </summary>
-                                                    <div className="mt-2 p-4 bg-gray-50 border border-gray-200 rounded">
-                                                        <div className="text-xs font-semibold text-gray-900 mb-2">AI EXTRACTED DATA:</div>
-                                                        <pre className="text-xs text-gray-900 whitespace-pre-wrap font-mono">
-                                                            {JSON.stringify(email.ai_extraction_result, null, 2)}
-                                                        </pre>
-                                                    </div>
-                                                </details>
+                                            <div className="mt-4 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <span className="text-blue-600 text-lg">🤖</span>
+                                                    <h4 className="font-bold text-gray-900 text-sm">AI EXTRACTION (What AI Read)</h4>
+                                                </div>
+                                                <pre className="text-xs text-gray-900 whitespace-pre-wrap font-mono bg-white p-3 rounded border border-blue-100 max-h-64 overflow-auto">
+                                                    {JSON.stringify(email.ai_extraction_result, null, 2)}
+                                                </pre>
                                             </div>
                                         )}
+
+                                        {/* Confidence Reasoning */}
+                                        {email.confidence_score !== null && email.confidence_score !== undefined && (
+                                            <div className="mt-4 p-4 bg-yellow-50 border-2 border-yellow-200 rounded-lg">
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <span className="text-yellow-600 text-lg">💡</span>
+                                                    <h4 className="font-bold text-gray-900 text-sm">CONFIDENCE REASONING ({email.confidence_score.toFixed(1)}%)</h4>
+                                                </div>
+                                                <div className="text-sm text-gray-900 bg-white p-3 rounded border border-yellow-100">
+                                                    {email.confidence_score >= 80 ? (
+                                                        <p>✅ <strong>High Confidence:</strong> Email contains clear product requests with quantities. All required information is present and easy to extract.</p>
+                                                    ) : email.confidence_score >= 50 ? (
+                                                        <p>⚠️ <strong>Medium Confidence:</strong> Email mentions products but may be missing some details like quantities or specifications. Some ambiguity in the request.</p>
+                                                    ) : (
+                                                        <p>❌ <strong>Low Confidence:</strong> Email is unclear or doesn't contain typical RFQ patterns. May need manual review to determine if it's a genuine quote request.</p>
+                                                    )}
+                                                    {email.ai_extraction_result?.error && (
+                                                        <p className="mt-2 text-red-600"><strong>AI Error:</strong> {email.ai_extraction_result.error}</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+
                                     </div>
                                 ))}
                             </div>

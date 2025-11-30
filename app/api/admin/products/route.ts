@@ -52,6 +52,9 @@ export async function PUT(request: NextRequest) {
         const body = await request.json()
         const { id, ...updateData } = body
 
+        console.log('PUT /api/admin/products - ID:', id)
+        console.log('PUT /api/admin/products - Update Data:', updateData)
+
         const { data, error } = await supabaseAdmin
             .from('products')
             .update(updateData)
@@ -59,10 +62,14 @@ export async function PUT(request: NextRequest) {
             .select()
             .single()
 
-        if (error) throw error
+        if (error) {
+            console.error('Supabase UPDATE error:', error)
+            throw error
+        }
 
         return NextResponse.json({ success: true, product: data })
     } catch (error: any) {
+        console.error('PUT /api/admin/products error:', error)
         return NextResponse.json({ error: error.message }, { status: 500 })
     }
 }

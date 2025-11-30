@@ -154,9 +154,9 @@ export default function AdminFlagged() {
                                             <div className="mt-4 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
                                                 <div className="flex items-center gap-2 mb-3">
                                                     <span className="text-blue-600 text-lg">🤖</span>
-                                                    <h4 className="font-bold text-gray-900 text-sm">AI EXTRACTION (What AI Read)</h4>
+                                                    <h4 className="font-bold text-sm" style={{ color: '#000' }}>AI EXTRACTION (What AI Read)</h4>
                                                 </div>
-                                                <pre className="text-xs text-gray-900 whitespace-pre-wrap font-mono bg-white p-3 rounded border border-blue-100 max-h-64 overflow-auto">
+                                                <pre className="text-xs whitespace-pre-wrap font-mono bg-white p-3 rounded border border-blue-100 max-h-64 overflow-auto" style={{ color: '#000' }}>
                                                     {JSON.stringify(email.ai_extraction_result, null, 2)}
                                                 </pre>
                                             </div>
@@ -167,9 +167,9 @@ export default function AdminFlagged() {
                                             <div className="mt-4 p-4 bg-yellow-50 border-2 border-yellow-200 rounded-lg">
                                                 <div className="flex items-center gap-2 mb-3">
                                                     <span className="text-yellow-600 text-lg">💡</span>
-                                                    <h4 className="font-bold text-gray-900 text-sm">CONFIDENCE REASONING ({email.confidence_score.toFixed(1)}%)</h4>
+                                                    <h4 className="font-bold text-sm" style={{ color: '#000' }}>CONFIDENCE REASONING ({email.confidence_score.toFixed(1)}%)</h4>
                                                 </div>
-                                                <div className="text-sm text-gray-900 bg-white p-3 rounded border border-yellow-100">
+                                                <div className="text-sm bg-white p-3 rounded border border-yellow-100" style={{ color: '#000' }}>
                                                     {email.confidence_score >= 80 ? (
                                                         <p>✅ <strong>High Confidence:</strong> Email contains clear product requests with quantities. All required information is present and easy to extract.</p>
                                                     ) : email.confidence_score >= 50 ? (

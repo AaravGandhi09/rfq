@@ -180,6 +180,15 @@ export default function AdminProducts() {
 
     const handleUpdate = async (e: React.FormEvent) => {
         e.preventDefault()
+
+        // Build specifications based on category (same as add)
+        let specifications = formData.specifications
+        if (productCategory === 'phone') {
+            specifications = `Storage: ${formData.storage}, RAM: ${formData.ram}`
+        } else if (productCategory === 'laptop') {
+            specifications = `Storage: ${formData.storage}, RAM: ${formData.ram}, Processor: ${formData.processor}, GPU: ${formData.gpu}`
+        }
+
         try {
             const res = await fetch('/api/admin/products', {
                 method: 'PUT',
@@ -187,15 +196,19 @@ export default function AdminProducts() {
                 body: JSON.stringify({
                     id: editingId,
                     ...formData,
+                    specifications,
                     base_price: parseFloat(formData.base_price),
                     min_price: parseFloat(formData.min_price),
-                    max_price: parseFloat(formData.max_price)
+                    max_price: parseFloat(formData.max_price),
+                    mrp: formData.mrp ? parseFloat(formData.mrp) : null
                 })
             })
-            setFormData({ name: '', description: '', specifications: '', category: '', mrp: '', base_price: '', min_price: '', max_price: '', unit: '', sku: '', hsn_code: '', is_active: true, storage: '', ram: '', processor: '', gpu: '' })
+
             if (res.ok) {
                 setEditingId(null)
+                setProductCategory('other')
                 setFormData({ name: '', description: '', specifications: '', category: '', mrp: '', base_price: '', min_price: '', max_price: '', unit: '', sku: '', hsn_code: '', is_active: true, storage: '', ram: '', processor: '', gpu: '' })
+                setShowAddForm(false)
                 fetchProducts()
             }
         } catch (error) {

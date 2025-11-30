@@ -243,10 +243,10 @@ export default function AdminProducts() {
                 {showAddForm && (
                     <Card className="mb-6">
                         <CardHeader>
-                            <CardTitle className="text-gray-900">Add New Product</CardTitle>
+                            <CardTitle className="text-gray-900">{editingId ? 'Edit Product' : 'Add New Product'}</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <form onSubmit={handleAddProduct} className="grid grid-cols-2 gap-4">
+                            <form onSubmit={editingId ? handleUpdate : handleAddProduct} className="grid grid-cols-2 gap-4">
                                 <div>
                                     <Label className="text-gray-900">Product Name</Label>
                                     <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
@@ -360,8 +360,12 @@ export default function AdminProducts() {
                                     <Input value={formData.unit} onChange={(e) => setFormData({ ...formData, unit: e.target.value })} placeholder="pcs, box, etc." />
                                 </div>
                                 <div className="col-span-2 flex gap-2">
-                                    <Button type="submit">Save Product</Button>
-                                    <Button type="button" variant="outline" onClick={() => setShowAddForm(false)}>Cancel</Button>
+                                    <Button type="submit">{editingId ? 'Update Product' : 'Save Product'}</Button>
+                                    <Button type="button" variant="outline" onClick={() => {
+                                        setShowAddForm(false)
+                                        setEditingId(null)
+                                        setFormData({ name: '', description: '', specifications: '', category: '', mrp: '', base_price: '', min_price: '', max_price: '', unit: '', sku: '', hsn_code: '', is_active: true, storage: '', ram: '', processor: '', gpu: '' })
+                                    }}>Cancel</Button>
                                 </div>
                             </form>
                         </CardContent>

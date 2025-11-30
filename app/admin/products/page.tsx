@@ -16,6 +16,7 @@ export default function AdminProducts() {
     const [uploading, setUploading] = useState(false)
     const [showAddForm, setShowAddForm] = useState(false)
     const [editingId, setEditingId] = useState<string | null>(null)
+    const [productCategory, setProductCategory] = useState<'phone' | 'laptop' | 'other'>('other')
     const [formData, setFormData] = useState({
         name: '',
         description: '',
@@ -27,7 +28,11 @@ export default function AdminProducts() {
         unit: '',
         sku: '',
         hsn_code: '',
-        is_active: true
+        is_active: true,
+        // Phone/Laptop specific
+        storage: '',
+        ram: '',
+        processor: ''
     })
     useEffect(() => {
         const session = localStorage.getItem('admin_session')
@@ -52,12 +57,22 @@ export default function AdminProducts() {
 
     const handleAddProduct = async (e: React.FormEvent) => {
         e.preventDefault()
+
+        // Build specifications based on category
+        let specifications = formData.specifications
+        if (productCategory === 'phone') {
+            specifications = `Storage: ${formData.storage}, RAM: ${formData.ram}`
+        } else if (productCategory === 'laptop') {
+            specifications = `Storage: ${formData.storage}, RAM: ${formData.ram}, Processor: ${formData.processor}`
+        }
+
         try {
             const res = await fetch('/api/admin/products', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     ...formData,
+                    specifications,
                     base_price: parseFloat(formData.base_price),
                     min_price: parseFloat(formData.min_price),
                     max_price: parseFloat(formData.max_price)
@@ -66,7 +81,8 @@ export default function AdminProducts() {
 
             if (res.ok) {
                 setShowAddForm(false)
-                setFormData({ name: '', description: '', specifications: '', category: '', base_price: '', min_price: '', max_price: '', unit: '', sku: '', hsn_code: '', is_active: true })
+                setFormData({ name: '', description: '', specifications: '', category: '', base_price: '', min_price: '', max_price: '', unit: '', sku: '', hsn_code: '', is_active: true, storage: '', ram: '', processor: '' })
+                setProductCategory('other')
                 fetchProducts()
             }
         } catch (error) {
@@ -111,6 +127,19 @@ export default function AdminProducts() {
 
     const handleEditProduct = (product: any) => {
         setEditingId(product.id)
+
+        // Detect product category from specifications
+        const specs = product.specifications || ''
+        const detectedCategory = specs.includes('Storage:') || specs.includes('RAM:')
+            ? (specs.includes('Processor:') ? 'laptop' : 'phone')
+            : 'other'
+        setProductCategory(detectedCategory)
+
+        // Parse specs for phone/laptop
+        const storageMatch = specs.match(/Storage:\s*([^,|]+)/)
+        const ramMatch = specs.match(/RAM:\s*([^,|]+)/)
+        const processorMatch = specs.match(/Processor:\s*([^,|]+)/)
+
         setFormData({
             name: product.name,
             description: product.description || '',
@@ -122,7 +151,10 @@ export default function AdminProducts() {
             unit: product.unit || '',
             sku: product.sku || '',
             hsn_code: product.hsn_code || '',
-            is_active: product.is_active
+            is_active: product.is_active,
+            storage: storageMatch ? storageMatch[1].trim() : '',
+            ram: ramMatch ? ramMatch[1].trim() : '',
+            processor: processorMatch ? processorMatch[1].trim() : ''
         })
         setShowAddForm(true)
     }
@@ -144,7 +176,7 @@ export default function AdminProducts() {
 
             if (res.ok) {
                 setEditingId(null)
-                setFormData({ name: '', description: '', specifications: '', category: '', base_price: '', min_price: '', max_price: '', unit: '', sku: '', hsn_code: '', is_active: true })
+                setFormData({ name: '', description: '', specifications: '', category: '', base_price: '', min_price: '', max_price: '', unit: '', sku: '', hsn_code: '', is_active: true, storage: '', ram: '', processor: '' })
                 fetchProducts()
             }
         } catch (error) {
@@ -203,8 +235,20 @@ export default function AdminProducts() {
                                     <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
                                 </div>
                                 <div>
-                                    <Label className="text-gray-900">Category</Label>
-                                    <Input value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} />
+                                    <Label className="text-gray-900">Product Type *</Label>
+                                    <select
+                                        className="w-full p-2 border rounded text-gray-900"
+                                        value={productCategory}
+                                        onChange={(e) => setProductCategory(e.target.value as 'phone' | 'laptop' | 'other')}
+                                    >
+                                        <option value="phone">📱 Phone</option>
+                                        <option value="laptop">💻 Laptop</option>
+                                        <option value="other">📦 Other</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <Label className="text-gray-900">Category/Brand</Label>
+                                    <Input value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} placeholder="e.g. Apple, Samsung" />
                                 </div>
                                 <div>
                                     <Label className="text-gray-900">HSN Code (for tax)</Label>
@@ -214,6 +258,44 @@ export default function AdminProducts() {
                                     <Label className="text-gray-900">Description</Label>
                                     <Input value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
                                 </div>
+
+                                {/* Dynamic fields based on product type */}
+                                {productCategory === 'phone' && (
+                                    <>
+                                        <div>
+                                            <Label className="text-gray-900">Storage *</Label>
+                                            <Input value={formData.storage} onChange={(e) => setFormData({ ...formData, storage: e.target.value })} placeholder="e.g. 128GB, 256GB" required />
+                                        </div>
+                                        <div>
+                                            <Label className="text-gray-900">RAM *</Label>
+                                            <Input value={formData.ram} onChange={(e) => setFormData({ ...formData, ram: e.target.value })} placeholder="e.g. 4GB, 8GB" required />
+                                        </div>
+                                    </>
+                                )}
+
+                                {productCategory === 'laptop' && (
+                                    <>
+                                        <div>
+                                            <Label className="text-gray-900">Storage *</Label>
+                                            <Input value={formData.storage} onChange={(e) => setFormData({ ...formData, storage: e.target.value })} placeholder="e.g. 512GB SSD" required />
+                                        </div>
+                                        <div>
+                                            <Label className="text-gray-900">RAM *</Label>
+                                            <Input value={formData.ram} onChange={(e) => setFormData({ ...formData, ram: e.target.value })} placeholder="e.g. 8GB, 16GB" required />
+                                        </div>
+                                        <div className="col-span-2">
+                                            <Label className="text-gray-900">Processor *</Label>
+                                            <Input value={formData.processor} onChange={(e) => setFormData({ ...formData, processor: e.target.value })} placeholder="e.g. Intel i5, Apple M1" required />
+                                        </div>
+                                    </>
+                                )}
+
+                                {productCategory === 'other' && (
+                                    <div className="col-span-2">
+                                        <Label className="text-gray-900">Specifications</Label>
+                                        <Input value={formData.specifications} onChange={(e) => setFormData({ ...formData, specifications: e.target.value })} placeholder="Any specific details" />
+                                    </div>
+                                )}
                                 <div>
                                     <Label className="text-gray-900">Base Price</Label>
                                     <Input type="number" step="0.01" value={formData.base_price} onChange={(e) => setFormData({ ...formData, base_price: e.target.value })} required />

@@ -67,8 +67,7 @@ export async function generateQuotePDF(data: QuoteData): Promise<Buffer> {
 
       // Add logo to header (top-left)
       try {
-        const logoImage = await loadImage(logoUrl);
-        doc.addImage(logoImage, 'PNG', 15, y, 40, 15);
+        doc.addImage(logoUrl, 'PNG', 15, y, 40, 15); // Directly use logoUrl
       } catch (err) {
         console.log('Logo load failed, continuing without logo');
       }
@@ -93,9 +92,9 @@ export async function generateQuotePDF(data: QuoteData): Promise<Buffer> {
 
       doc.setFont('helvetica', 'normal')
       doc.setFontSize(9)
-      doc.text(`Quote #: ${data.quoteNumber}`, 15, y + 7)
+      doc.text(`Quote #: ${data.quoteId}`, 15, y + 7)
       doc.text(`Date: ${data.date}`, 15, y + 12)
-      doc.text(`Valid Until: ${data.expiryDate}`, 15, y + 17)
+      doc.text(`Valid Until: ${data.validUntil}`, 15, y + 17)
 
       // Company Details (Right side)
       doc.text(`PAN: AAHFT9063B`, 150, y + 7)
@@ -211,7 +210,6 @@ export async function generateQuotePDF(data: QuoteData): Promise<Buffer> {
       y += 4
       doc.text('* Payment terms as per agreed terms.', 20, y)
 
-      // Authorized Signature
       doc.setFontSize(9)
       doc.text('Authorized Signature', pageWidth - 50, y + 10, { align: 'center' })
 

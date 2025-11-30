@@ -195,12 +195,18 @@ export default function AdminProducts() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     id: editingId,
-                    ...formData,
+                    name: formData.name,
+                    description: formData.description,
                     specifications,
+                    category: formData.category,
                     base_price: parseFloat(formData.base_price),
                     min_price: parseFloat(formData.min_price),
                     max_price: parseFloat(formData.max_price),
-                    mrp: formData.mrp ? parseFloat(formData.mrp) : null
+                    mrp: formData.mrp ? parseFloat(formData.mrp) : null,
+                    unit: formData.unit,
+                    sku: formData.sku,
+                    hsn_code: formData.hsn_code,
+                    is_active: formData.is_active
                 })
             })
 

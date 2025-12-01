@@ -120,7 +120,7 @@ export async function generateQuotePDF(data: QuoteData): Promise<Buffer> {
 
       doc.setFont('helvetica', 'normal')
       doc.setFontSize(9)
-      doc.text('Shop No.4, Govind Nagar, S.No.50/1/2, Karve Road, Pune - 411004', 105, y + 12, {
+      doc.text('485, Chinmaya Mission Hospital Rd, Indiranagar 1st Stage, Bengaluru- 560038', 105, y + 12, {
         align: 'center'
       })
 

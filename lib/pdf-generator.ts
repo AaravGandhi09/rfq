@@ -10,7 +10,7 @@ const STAMP_BASE64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAfQAAAHVCAYA
 function formatCurrency(num: number) {
   // Use en-IN grouping and always show two decimals
   try {
-    return '\u20B9 ' + num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    return 'Rs. ' + num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   } catch (e) {
     // fallback if environment doesn't support rupee glyph
     return 'Rs. ' + num.toFixed(2)
@@ -109,44 +109,57 @@ export async function generateQuotePDF(data: QuoteData): Promise<Buffer> {
       let y = 20
 
       /* LOGO FIXED HERE */
-      // Perfect rectangular logo
-      addBase64Image(doc, LOGO_BASE64, 15, y, 45, 22)
+      const logoWidth = 40;   // rectangle shape
+      const logoHeight = 20;
+
+      const logoX = 15;
+      const logoY = 12;
+
+      // draw logo
+      addBase64Image(doc, LOGO_BASE64, logoX, logoY, logoWidth, logoHeight);
+
+      // address moved under the logo
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+
+      doc.text(
+        '485, Chinmaya Mission Hospital Rd, Indiranagar 1st Stage, Bengaluru - 560038',
+        logoX,
+        logoY + logoHeight + 8, // address BELOW the logo
+        { maxWidth: pageWidth - 30 }
+      );
+
+      // advance y below header area
+      y = logoY + logoHeight + 25;
 
 
-      // Header - Company Name
+      // ===============================
+      // QUOTATION + PAN/GST SECTION
+      // ===============================
+
+      // QUOTATION (move lower)
       doc.setFont('helvetica', 'bold')
-      doc.setFontSize(20)
-      doc.text('TULSI MARKETING', 105, y + 5, { align: 'center' })
+      doc.setFontSize(18)
+      doc.text('QUOTATION', pageWidth - 20, 40, { align: 'right' })
 
+      // PAN + GST below quotation (lowered for clarity)
       doc.setFont('helvetica', 'normal')
-      doc.setFontSize(9)
-      doc.text('485, Chinmaya Mission Hospital Rd, Indiranagar 1st Stage, Bengaluru- 560038', 105, y + 12, {
-        align: 'center'
-      })
-
-      y += 25
-
-      // QUOTATION heading moved to top-right
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(16)
-      doc.text('QUOTATION', pageWidth - 20, 15, { align: 'right' })
-
-
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(9)
-      doc.text(`Quote #: ${data.quoteId}`, 15, y + 7)
-      doc.text(`Date: ${data.date}`, 15, y + 12)
-      doc.text(`Valid Until: ${data.validUntil}`, 15, y + 17)
-
-      const rightInfoY = 25
       doc.setFontSize(10)
-      doc.text(`PAN: AAHFT9063B`, pageWidth - 20, rightInfoY, { align: 'right' })
-      doc.text(`GSTIN: 27AAHFT9063B1ZH`, pageWidth - 20, rightInfoY + 6, { align: 'right' })
+      doc.text(`PAN: AAHFT9063B`, pageWidth - 20, 50, { align: 'right' })
+      doc.text(`GSTIN: 27AAHFT9063B1ZH`, pageWidth - 20, 56, { align: 'right' })
+
+      // Quote metadata (kept on left)
+      doc.setFontSize(9)
+      doc.text(`Quote #: ${data.quoteId}`, 15, 55)
+      doc.text(`Date: ${data.date}`, 15, 60)
+      doc.text(`Valid Until: ${data.validUntil}`, 15, 65)
 
 
       y += 30
 
       // Customer Details
+      y = 10 + logoHeight + 25   // now works because logoHeight exists
+
       doc.setFont('helvetica', 'bold')
       doc.text('Bill To:', 15, y)
       doc.text('Ship To:', 105, y)
@@ -166,6 +179,7 @@ export async function generateQuotePDF(data: QuoteData): Promise<Buffer> {
       doc.text(shipToText, 105, y + 5, { maxWidth: 85 })
 
       y += 30
+
 
       // Items Table
       const tableData = data.matchedItems.map((item) => {
@@ -187,7 +201,7 @@ export async function generateQuotePDF(data: QuoteData): Promise<Buffer> {
       })
 
       autoTable(doc, {
-        startY: y,
+        startY: y + 2,
         margin: { left: 15, right: 15 },
         head: [['Description', 'HSN', 'Qty', 'Rate', 'CGST (9%)', 'SGST (9%)', 'Amount']],
         body: tableData,
@@ -272,12 +286,28 @@ export async function generateQuotePDF(data: QuoteData): Promise<Buffer> {
       doc.text('For TULSI MARKETING', 150, y)
 
       /* STAMP FIXED HERE */
-      // Perfect square stamp
-      addBase64Image(doc, STAMP_BASE64, pageWidth - 50, y + 5, 30, 30)
+      /* STAMP + AUTH SIGN (stamp centered in right signature area; auth sign below stamp) */
+      const stampSize = 40 // make stamp a square
+      // center stamp inside the right-side signature column (right aligned)
+      const stampCenterX = pageWidth - 40 // keeps it near the right margin but centered in signature area
+      const stampX = stampCenterX - stampSize / 2
+      const stampY = y + 6
 
-      y += 25
+      addBase64Image(doc, STAMP_BASE64, stampX, stampY, stampSize, stampSize)
 
-      doc.text('Authorized Signatory', 150, y)
+      // For label above or beside: keep "For TULSI MARKETING" above the stamp
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(9)
+      doc.text('For TULSI MARKETING', pageWidth - 20, y, { align: 'right' })
+
+      // Move Authorized Signatory text below the stamp, right aligned
+      const authY = stampY + stampSize + 8
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(9)
+      doc.text('Authorized Signatory', pageWidth - 20, authY, { align: 'right' })
+
+      // bump y after signature area
+      y = authY + 14
 
       // Footer
       y = doc.internal.pageSize.getHeight() - 20

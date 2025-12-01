@@ -142,7 +142,7 @@ export async function generateQuotePDF(data: QuoteData): Promise<Buffer> {
 
       // advance y below header area
       // after logo + address
-      y = logoY + logoHeight + 35; // give more breathing room
+      y = logoY + logoHeight + 45; // give more breathing room
 
 
 
@@ -217,8 +217,9 @@ export async function generateQuotePDF(data: QuoteData): Promise<Buffer> {
       })
 
       autoTable(doc, {
-        startY: y + 5,
-        margin: { left: 15, right: 15 },
+        startY: y + 8,
+
+        margin: { left: 6, right: 15 },
 
         head: [['Description', 'HSN', 'Qty', 'Rate', 'CGST (9%)', 'SGST (9%)', 'Amount']],
         body: tableData,
@@ -249,7 +250,6 @@ export async function generateQuotePDF(data: QuoteData): Promise<Buffer> {
           5: { cellWidth: 25, halign: 'right' },    // SGST
           6: { cellWidth: 30, halign: 'right' }     // Amount
         },
-
 
         didParseCell(data) {
           if (data.cell.section === 'body' && data.column.index >= 3 && data.cell.raw) {
@@ -317,28 +317,28 @@ export async function generateQuotePDF(data: QuoteData): Promise<Buffer> {
       doc.text('For TULSI MARKETING', 150, y)
 
       /* STAMP FIXED HERE */
-      /* STAMP + AUTH SIGN (stamp centered in right signature area; auth sign below stamp) */
-      const stampSize = 40 // make stamp a square
-      // center stamp inside the right-side signature column (right aligned)
-      const stampCenterX = pageWidth - 40 // keeps it near the right margin but centered in signature area
-      const stampX = stampCenterX - stampSize / 2
-      const stampY = y + 6
+      // Base Y position for signature section (adjust depending on table height)
+      let sigY = y + 30;  // move 30 units below table end
 
-      addBase64Image(doc, STAMP_BASE64, stampX, stampY, stampSize, stampSize)
+      // 1️ Company label above stamp
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.text('For TULSI MARKETING', pageWidth - 15, sigY, { align: 'right' });
 
-      // For label above or beside: keep "For TULSI MARKETING" above the stamp
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(9)
-      doc.text('For TULSI MARKETING', pageWidth - 20, y, { align: 'right' })
+      // 2️ Stamp image
+      const stampSize = 45; // square size
+      const stampX = pageWidth - 60; // position stamp inside right-side signature column
+      const stampY = sigY + 5;       // 5 units below label
+      addBase64Image(doc, STAMP_BASE64, stampX, stampY, stampSize, stampSize);
 
-      // Move Authorized Signatory text below the stamp, right aligned
-      const authY = stampY + stampSize + 8
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(9)
-      doc.text('Authorized Signatory', pageWidth - 20, authY, { align: 'right' })
+      // 3️ Authorized Signatory text below stamp
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.text('Authorized Signatory', pageWidth - 37, stampY + stampSize + 10, { align: 'center' });
+
 
       // bump y after signature area
-      y = authY + 14
+      y = stampY + stampSize + 10 + 14;
 
       // Footer
       y = doc.internal.pageSize.getHeight() - 20

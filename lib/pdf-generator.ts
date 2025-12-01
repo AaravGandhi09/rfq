@@ -219,7 +219,7 @@ export async function generateQuotePDF(data: QuoteData): Promise<Buffer> {
       autoTable(doc, {
         startY: y + 8,
 
-        margin: { left: 6, right: 15 },
+        margin: { left: 3, right: 15 },
 
         head: [['Description', 'HSN', 'Qty', 'Rate', 'CGST (9%)', 'SGST (9%)', 'Amount']],
         body: tableData,
@@ -314,31 +314,31 @@ export async function generateQuotePDF(data: QuoteData): Promise<Buffer> {
       y += 10
       doc.setFont('helvetica', 'normal')
       doc.setFontSize(9)
-      doc.text('For TULSI MARKETING', 150, y)
+
 
       /* STAMP FIXED HERE */
       // Base Y position for signature section (adjust depending on table height)
-      let sigY = y + 30;  // move 30 units below table end
+      // Base Y for signature section (adjust depending on table height)
+      let sigY = y + 10; // closer to table
 
-      // 1️ Company label above stamp
+      // 1️⃣ Company label above stamp
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(9);
       doc.text('For TULSI MARKETING', pageWidth - 15, sigY, { align: 'right' });
 
-      // 2️ Stamp image
-      const stampSize = 45; // square size
-      const stampX = pageWidth - 60; // position stamp inside right-side signature column
+      // 2️⃣ Stamp image (perfect square, right below label)
+      const stampSize = 40; // square size
+      const stampX = pageWidth - 60; // X position inside right signature area
       const stampY = sigY + 5;       // 5 units below label
       addBase64Image(doc, STAMP_BASE64, stampX, stampY, stampSize, stampSize);
 
-      // 3️ Authorized Signatory text below stamp
+      // 3️⃣ Authorized Signatory text below stamp
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(9);
-      doc.text('Authorized Signatory', pageWidth - 37, stampY + stampSize + 10, { align: 'center' });
-
+      doc.text('Authorized Signatory', pageWidth - 37, stampY + stampSize + 8, { align: 'center' });
 
       // bump y after signature area
-      y = stampY + stampSize + 10 + 14;
+      y = stampY + stampSize + 18; // leave space after signature
 
       // Footer
       y = doc.internal.pageSize.getHeight() - 20

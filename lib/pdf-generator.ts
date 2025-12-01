@@ -96,7 +96,9 @@ export async function generateQuotePDF(data: QuoteData): Promise<Buffer> {
       let y = 20
 
       /* LOGO FIXED HERE */
-      addBase64Image(doc, LOGO_BASE64, 15, y, 30, 30)
+      // Perfect rectangular logo
+      addBase64Image(doc, LOGO_BASE64, 15, y, 45, 22)
+
 
       // Header - Company Name
       doc.setFont('helvetica', 'bold')
@@ -111,10 +113,11 @@ export async function generateQuotePDF(data: QuoteData): Promise<Buffer> {
 
       y += 25
 
-      // Quotation Details
+      // QUOTATION heading moved to top-right
       doc.setFont('helvetica', 'bold')
-      doc.setFontSize(12)
-      doc.text('QUOTATION', 15, y)
+      doc.setFontSize(16)
+      doc.text('QUOTATION', pageWidth - 20, 15, { align: 'right' })
+
 
       doc.setFont('helvetica', 'normal')
       doc.setFontSize(9)
@@ -122,9 +125,11 @@ export async function generateQuotePDF(data: QuoteData): Promise<Buffer> {
       doc.text(`Date: ${data.date}`, 15, y + 12)
       doc.text(`Valid Until: ${data.validUntil}`, 15, y + 17)
 
-      // Company Details (Right)
-      doc.text(`PAN: AAHFT9063B`, 150, y + 7)
-      doc.text(`GSTIN: 27AAHFT9063B1ZH`, 150, y + 12)
+      const rightInfoY = 25
+      doc.setFontSize(10)
+      doc.text(`PAN: AAHFT9063B`, pageWidth - 20, rightInfoY, { align: 'right' })
+      doc.text(`GSTIN: 27AAHFT9063B1ZH`, pageWidth - 20, rightInfoY + 6, { align: 'right' })
+
 
       y += 30
 
@@ -248,7 +253,9 @@ export async function generateQuotePDF(data: QuoteData): Promise<Buffer> {
       doc.text('For TULSI MARKETING', 150, y)
 
       /* STAMP FIXED HERE */
-      addBase64Image(doc, STAMP_BASE64, 150, y + 5, 40, 15)
+      // Perfect square stamp
+      addBase64Image(doc, STAMP_BASE64, pageWidth - 50, y + 5, 30, 30)
+
       y += 25
 
       doc.text('Authorized Signatory', 150, y)
